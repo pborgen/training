@@ -25,8 +25,10 @@ function loadPrefs() {
   try {
     const p = JSON.parse(localStorage.getItem(prefsKey) || "{}");
     if (p.googleClientId) el("googleClientId").value = p.googleClientId;
-    if (p.syncEndpoint) el("syncEndpoint").value = p.syncEndpoint;
-  } catch {}
+    el("syncEndpoint").value = p.syncEndpoint || `${location.origin}/api/sync`;
+  } catch {
+    el("syncEndpoint").value = `${location.origin}/api/sync`;
+  }
 }
 
 function normalize(row) {

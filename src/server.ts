@@ -16,11 +16,11 @@ app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(root));
 
-function safeId(email) {
+function safeId(email: string) {
   return (email || "unknown").toLowerCase().replace(/[^a-z0-9._-]/g, "_");
 }
 
-async function identifyUser(req) {
+async function identifyUser(req: express.Request): Promise<string | null> {
   const devEmail = req.header("x-user-email");
   if (devEmail) return devEmail;
 
@@ -50,7 +50,7 @@ app.get("/api/sync", async (req, res) => {
       return res.json({ rows: [], syncedAt: null, user: email });
     }
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: (e as Error).message });
   }
 });
 
@@ -71,7 +71,7 @@ app.post("/api/sync", async (req, res) => {
 
     res.json({ ok: true, ...payload });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: (e as Error).message });
   }
 });
 

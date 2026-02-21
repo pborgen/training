@@ -3,6 +3,7 @@
 MVP web app for workout planning and analysis.
 
 ## Implemented
+- TypeScript codebase (frontend + backend)
 - Editable workout table
 - Volume auto-calc (`Weight * Sets * Reps`)
 - Charts (volume by exercise, sets vs reps)

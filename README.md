@@ -1,11 +1,24 @@
-# Training
+# Training App
 
-Initial import from first-tab workout PDF/CSV source.
+MVP web app for workout planning and analysis.
 
-## Data
-- `data/first_tab.csv` contains the extracted first-tab rows.
+## Implemented
+- Editable workout table
+- Volume auto-calc (`Weight * Sets * Reps`)
+- Charts (volume by exercise, sets vs reps)
+- Local save/reset via browser storage
+- Load default data from `data/first_tab.csv`
+- Upload `.xlsx` and preserve formula text where available (stored in `Formula` column)
 
-## Next build steps
-1. Scaffold app UI (editable table + charts)
-2. Add Google login
-3. Wire import/export and persistence
+## Run locally
+Use any static server from this folder:
+
+```bash
+cd training
+python3 -m http.server 8080
+# open http://localhost:8080
+```
+
+## Notes
+- This MVP runs fully client-side (no backend auth yet).
+- Next step: add Google login + cloud sync.

@@ -1,0 +1,22 @@
+name: TrainingiOS
+options:
+  bundleIdPrefix: com.pborgen
+settings:
+  base:
+    SWIFT_VERSION: 5.9
+    IPHONEOS_DEPLOYMENT_TARGET: 16.0
+targets:
+  TrainingiOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pborgen.training
+        INFOPLIST_FILE: Sources/Info.plist
+products:
+  - name: TrainingiOS
+    type: application
+    targets:
+      - TrainingiOS

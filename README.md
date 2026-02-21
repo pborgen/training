@@ -35,6 +35,18 @@ cd training
 python3 -m http.server 8080
 ```
 
+## iOS app scaffold
+- Added at `ios-app/` (SwiftUI + XcodeGen)
+- Features: pull/push rows to `/api/sync`, edit rows, recalc volume
+
+Generate project:
+```bash
+brew install xcodegen
+cd ios-app
+xcodegen generate
+open TrainingiOS.xcodeproj
+```
+
 ## Notes
 - Default backend sync endpoint is `http://localhost:8080/api/sync`.
 - You can set that value in the UI "sync endpoint" box and use Push/Pull.

@@ -9,6 +9,9 @@ MVP web app for workout planning and analysis.
 - Local save/reset via browser storage
 - Load default data from `data/first_tab.csv`
 - Upload `.xlsx` and preserve formula text per row (stored in `Formula` column)
+- JSON export/import for dataset portability
+- Google Sign-In button (ID token acquisition on client)
+- Optional cloud sync endpoint (push/pull JSON via GET/POST)
 
 ## Workbook notes (from your uploaded file)
 - First sheet name: `Mary Nicole`
@@ -25,5 +28,6 @@ python3 -m http.server 8080
 ```
 
 ## Notes
-- This MVP runs fully client-side (no backend auth yet).
-- Next step: add Google login + cloud sync.
+- This app runs client-side.
+- Google Sign-In currently stores an ID token in memory for optional authenticated sync calls.
+- For production cloud sync, pair with a backend endpoint that validates Google tokens and stores per-user records.

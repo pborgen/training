@@ -1,10 +1,33 @@
 const COLS = ["Phase","Order","Exercise","Weight","Sets","Reps","Volume","Notes","Formula"];
 const tbody = document.querySelector("#workoutTable tbody");
 const storageKey = "training_app_rows_v1";
+const prefsKey = "training_app_prefs_v1";
 let rows = [];
 let volumeChart, summaryChart;
+let googleIdToken = "";
+
+const el = (id) => document.getElementById(id);
 
 function num(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
+
+function getPrefs() {
+  return {
+    googleClientId: el("googleClientId")?.value?.trim() || "",
+    syncEndpoint: el("syncEndpoint")?.value?.trim() || ""
+  };
+}
+
+function savePrefs() {
+  localStorage.setItem(prefsKey, JSON.stringify(getPrefs()));
+}
+
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(prefsKey) || "{}");
+    if (p.googleClientId) el("googleClientId").value = p.googleClientId;
+    if (p.syncEndpoint) el("syncEndpoint").value = p.syncEndpoint;
+  } catch {}
+}
 
 function normalize(row) {
   const out = Object.fromEntries(COLS.map(c => [c, row[c] ?? ""]));
@@ -68,6 +91,7 @@ function drawCharts() {
 
 function saveLocal() {
   localStorage.setItem(storageKey, JSON.stringify(rows));
+  savePrefs();
   alert("Saved locally");
 }
 
@@ -109,7 +133,6 @@ function loadXlsx(file) {
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
       const obj = {};
       const formulas = [];
-
       header.forEach((h, cIdx) => {
         const addr = XLSX.utils.encode_cell({ r, c: range.s.c + cIdx });
         const cell = ws[addr];
@@ -117,7 +140,6 @@ function loadXlsx(file) {
         obj[key] = cell?.v ?? "";
         if (cell?.f) formulas.push(`${key}=${cell.f}`);
       });
-
       obj.Formula = formulas.join(" | ");
       if (Object.values(obj).some(v => String(v).trim() !== "")) parsed.push(normalize(obj));
     }
@@ -129,14 +151,92 @@ function loadXlsx(file) {
   reader.readAsArrayBuffer(file);
 }
 
-document.getElementById("xlsxInput").addEventListener("change", (e) => {
+function exportJson() {
+  const blob = new Blob([JSON.stringify({ rows, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "training-data.json";
+  a.click();
+}
+
+function importJson(file) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    try {
+      const parsed = JSON.parse(fr.result);
+      rows = (parsed.rows || []).map(normalize);
+      renderTable();
+      drawCharts();
+    } catch (e) {
+      alert("Invalid JSON file");
+    }
+  };
+  fr.readAsText(file);
+}
+
+function googleSignIn() {
+  const clientId = el("googleClientId").value.trim();
+  if (!clientId) return alert("Enter Google Client ID first");
+  savePrefs();
+
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: (resp) => {
+      googleIdToken = resp.credential;
+      el("userLabel").textContent = "Google sign-in connected";
+    }
+  });
+  google.accounts.id.prompt();
+}
+
+async function pushSync() {
+  const url = el("syncEndpoint").value.trim();
+  if (!url) return alert("Set sync endpoint URL first");
+  savePrefs();
+
+  const payload = { rows, syncedAt: new Date().toISOString() };
+  const headers = { "Content-Type": "application/json" };
+  if (googleIdToken) headers["Authorization"] = `Bearer ${googleIdToken}`;
+
+  const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(payload) });
+  if (!res.ok) return alert(`Push failed (${res.status})`);
+  alert("Push sync complete");
+}
+
+async function pullSync() {
+  const url = el("syncEndpoint").value.trim();
+  if (!url) return alert("Set sync endpoint URL first");
+  savePrefs();
+
+  const headers = {};
+  if (googleIdToken) headers["Authorization"] = `Bearer ${googleIdToken}`;
+
+  const res = await fetch(url, { headers });
+  if (!res.ok) return alert(`Pull failed (${res.status})`);
+  const data = await res.json();
+  rows = (data.rows || []).map(normalize);
+  renderTable();
+  drawCharts();
+  alert("Pull sync complete");
+}
+
+el("xlsxInput").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) loadXlsx(file);
 });
-document.getElementById("loadCsvBtn").addEventListener("click", loadCsv);
-document.getElementById("saveBtn").addEventListener("click", saveLocal);
-document.getElementById("resetBtn").addEventListener("click", () => { localStorage.removeItem(storageKey); loadCsv(); });
+el("importJsonInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) importJson(file);
+});
+el("loadCsvBtn").addEventListener("click", loadCsv);
+el("saveBtn").addEventListener("click", saveLocal);
+el("resetBtn").addEventListener("click", () => { localStorage.removeItem(storageKey); loadCsv(); });
+el("exportJsonBtn").addEventListener("click", exportJson);
+el("googleSignInBtn").addEventListener("click", googleSignIn);
+el("pushSyncBtn").addEventListener("click", pushSync);
+el("pullSyncBtn").addEventListener("click", pullSync);
 
+loadPrefs();
 if (!loadLocal()) loadCsv();
 renderTable();
 drawCharts();

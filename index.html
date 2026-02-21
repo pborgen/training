@@ -17,6 +17,20 @@
       <button id="loadCsvBtn">Load bundled CSV</button>
       <button id="saveBtn">Save local</button>
       <button id="resetBtn">Reset</button>
+      <button id="exportJsonBtn">Export JSON</button>
+      <input id="importJsonInput" type="file" accept=".json" />
+    </section>
+
+    <section class="controls">
+      <input id="googleClientId" placeholder="Google Client ID" />
+      <button id="googleSignInBtn">Google Sign-In</button>
+      <span id="userLabel" class="hint">Not signed in</span>
+    </section>
+
+    <section class="controls">
+      <input id="syncEndpoint" placeholder="Optional sync endpoint URL (GET/POST)" />
+      <button id="pushSyncBtn">Push Sync</button>
+      <button id="pullSyncBtn">Pull Sync</button>
     </section>
 
     <p class="hint">Tip: Upload .xlsx to preserve formulas (captured per-cell).</p>
@@ -38,6 +52,7 @@
     </section>
   </main>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="./app.js"></script>
 </body>
 </html>

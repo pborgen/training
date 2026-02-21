@@ -8,7 +8,12 @@ MVP web app for workout planning and analysis.
 - Charts (volume by exercise, sets vs reps)
 - Local save/reset via browser storage
 - Load default data from `data/first_tab.csv`
-- Upload `.xlsx` and preserve formula text where available (stored in `Formula` column)
+- Upload `.xlsx` and preserve formula text per row (stored in `Formula` column)
+
+## Workbook notes (from your uploaded file)
+- First sheet name: `Mary Nicole`
+- Columns: `Phase, Order, Exercise, Weight, Sets, Reps, Volume, Notes`
+- Contains formulas for weight and volume calculations (for example: plate math + SUM formulas)
 
 ## Run locally
 Use any static server from this folder:

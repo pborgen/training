@@ -102,19 +102,26 @@ function loadXlsx(file) {
     const header = [];
     for (let c = range.s.c; c <= range.e.c; c++) {
       const addr = XLSX.utils.encode_cell({ r: range.s.r, c });
-      header.push((ws[addr]?.v || "").toString());
+      header.push((ws[addr]?.v || "").toString().trim());
     }
+
     const parsed = [];
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
       const obj = {};
+      const formulas = [];
+
       header.forEach((h, cIdx) => {
         const addr = XLSX.utils.encode_cell({ r, c: range.s.c + cIdx });
         const cell = ws[addr];
-        obj[h] = cell?.v ?? "";
-        if (h === "Volume" && cell?.f) obj.Formula = "=" + cell.f;
+        const key = h || `Col${cIdx + 1}`;
+        obj[key] = cell?.v ?? "";
+        if (cell?.f) formulas.push(`${key}=${cell.f}`);
       });
+
+      obj.Formula = formulas.join(" | ");
       if (Object.values(obj).some(v => String(v).trim() !== "")) parsed.push(normalize(obj));
     }
+
     rows = parsed;
     renderTable();
     drawCharts();

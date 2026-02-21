@@ -1,23 +1,13 @@
 {
-  "name": "training-app",
-  "version": "0.1.0",
+  "name": "training-monorepo",
   "private": true,
-  "type": "module",
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsx src/server.ts",
-    "start": "npm run build && node dist/server.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.1",
-    "google-auth-library": "^9.14.2"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.10.1",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "web:dev": "npm --workspace apps/web run dev",
+    "web:build": "npm --workspace apps/web run build",
+    "web:start": "npm --workspace apps/web run start"
   }
 }

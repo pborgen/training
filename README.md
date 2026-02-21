@@ -1,57 +1,22 @@
-# Training App
+# Training Monorepo
 
-MVP web app for workout planning and analysis.
+This repository is now organized as a monorepo.
 
-## Implemented
-- TypeScript codebase (frontend + backend)
-- Editable workout table
-- Volume auto-calc (`Weight * Sets * Reps`)
-- Charts (volume by exercise, sets vs reps)
-- Local save/reset via browser storage
-- Load default data from `data/first_tab.csv`
-- Upload `.xlsx` and preserve formula text per row (stored in `Formula` column)
-- JSON export/import for dataset portability
-- Google Sign-In button (ID token acquisition on client)
-- Optional cloud sync endpoint (push/pull JSON via GET/POST)
+## Structure
+- `apps/web` — TypeScript web app + sync backend
+- `apps/ios` — native iOS app scaffold (SwiftUI + XcodeGen)
 
-## Workbook notes (from your uploaded file)
-- First sheet name: `Mary Nicole`
-- Columns: `Phase, Order, Exercise, Weight, Sets, Reps, Volume, Notes`
-- Contains formulas for weight and volume calculations (for example: plate math + SUM formulas)
-
-## Run locally
-
-### Full app + sync backend
+## Web app
 ```bash
-cd training
 npm install
-cp .env.example .env   # set GOOGLE_CLIENT_ID for real Google token verification
-npm start
+npm run web:start
 # open http://localhost:8080
 ```
 
-### Static-only mode (no backend sync)
+## iOS app
 ```bash
-cd training
-python3 -m http.server 8080
-```
-
-## iOS app scaffold
-- Added at `ios-app/` (SwiftUI + XcodeGen)
-- Features: pull/push rows to `/api/sync`, edit rows, recalc volume, Swift Charts, Google Sign-In hook
-
-Generate project:
-```bash
+cd apps/ios
 brew install xcodegen
-cd ios-app
 xcodegen generate
 open TrainingiOS.xcodeproj
 ```
-
-See `ios-app/APPSTORE_CHECKLIST.md` for TestFlight prep.
-
-## Notes
-- Default backend sync endpoint is `http://localhost:8080/api/sync`.
-- You can set that value in the UI "sync endpoint" box and use Push/Pull.
-- Google Sign-In stores an ID token in memory; backend validates it when `GOOGLE_CLIENT_ID` is configured.
-- For dev/testing, you can also send `x-user-email` header (already supported by the app).

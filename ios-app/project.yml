@@ -5,6 +5,10 @@ settings:
   base:
     SWIFT_VERSION: 5.9
     IPHONEOS_DEPLOYMENT_TARGET: 16.0
+packages:
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 7.1.0
 targets:
   TrainingiOS:
     type: application
@@ -15,6 +19,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pborgen.training
         INFOPLIST_FILE: Sources/Info.plist
+    dependencies:
+      - package: GoogleSignIn
 products:
   - name: TrainingiOS
     type: application

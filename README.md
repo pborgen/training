@@ -37,7 +37,7 @@ python3 -m http.server 8080
 
 ## iOS app scaffold
 - Added at `ios-app/` (SwiftUI + XcodeGen)
-- Features: pull/push rows to `/api/sync`, edit rows, recalc volume
+- Features: pull/push rows to `/api/sync`, edit rows, recalc volume, Swift Charts, Google Sign-In hook
 
 Generate project:
 ```bash
@@ -46,6 +46,8 @@ cd ios-app
 xcodegen generate
 open TrainingiOS.xcodeproj
 ```
+
+See `ios-app/APPSTORE_CHECKLIST.md` for TestFlight prep.
 
 ## Notes
 - Default backend sync endpoint is `http://localhost:8080/api/sync`.

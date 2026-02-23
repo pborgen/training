@@ -18,11 +18,21 @@ struct ContentView: View {
 
                 HStack {
                     Button("Google Sign-In") { Task { await signIn() } }
+                    Button("Session") { Task { await vm.refreshSession() } }
                     Button("Pull") { Task { await vm.pull() } }
                     Button("Push") { Task { await vm.push() } }
                     Button("Add Row") { vm.addRow() }
                 }
                 .buttonStyle(.borderedProminent)
+
+                GroupBox("Session Status") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Authenticated: \(vm.sessionAuthenticated ? "Yes" : "No")")
+                        Text("Session Email: \(vm.sessionEmail.isEmpty ? "-" : vm.sessionEmail)")
+                        Text("Last Sync: \(vm.lastSyncAt.isEmpty ? "-" : vm.lastSyncAt)")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 ChartsView(rows: vm.rows)
 
@@ -51,6 +61,7 @@ struct ContentView: View {
             }
             .padding()
             .navigationTitle("Training")
+            .task { await vm.refreshSession() }
         }
     }
 
@@ -65,6 +76,7 @@ struct ContentView: View {
             vm.idToken = t.idToken
             vm.userEmail = t.email
             vm.status = "Signed in as \(t.email)"
+            await vm.refreshSession()
         } catch {
             vm.status = "Google sign-in error: \(error.localizedDescription)"
         }

@@ -7,6 +7,9 @@ final class TrainingViewModel: ObservableObject {
     @Published var idToken: String = ""
     @Published var rows: [WorkoutRow] = []
     @Published var status: String = ""
+    @Published var sessionAuthenticated: Bool = false
+    @Published var sessionEmail: String = ""
+    @Published var lastSyncAt: String = ""
 
     private let api = APIClient()
 
@@ -25,12 +28,25 @@ final class TrainingViewModel: ObservableObject {
         UserDefaults.standard.set(userEmail, forKey: "training.userEmail")
     }
 
+    func refreshSession() async {
+        do {
+            let sess = try await api.session(baseURL: baseURL, userEmail: userEmail, idToken: idToken)
+            sessionAuthenticated = sess.authenticated
+            sessionEmail = sess.email ?? ""
+        } catch {
+            sessionAuthenticated = false
+            sessionEmail = ""
+        }
+    }
+
     func pull() async {
         do {
             persistSettings()
             status = "Pulling..."
             rows = try await api.pull(baseURL: baseURL, userEmail: userEmail, idToken: idToken)
+            lastSyncAt = ISO8601DateFormatter().string(from: Date())
             status = "Pulled \(rows.count) rows"
+            await refreshSession()
         } catch {
             status = "Pull error: \(error.localizedDescription)"
         }
@@ -41,7 +57,9 @@ final class TrainingViewModel: ObservableObject {
             persistSettings()
             status = "Pushing..."
             try await api.push(baseURL: baseURL, userEmail: userEmail, idToken: idToken, rows: rows)
+            lastSyncAt = ISO8601DateFormatter().string(from: Date())
             status = "Push complete"
+            await refreshSession()
         } catch {
             status = "Push error: \(error.localizedDescription)"
         }

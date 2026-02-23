@@ -12,6 +12,25 @@ const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as
 
 function num(v: string) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
 
+function safeEvalMath(expr: string): number {
+  const cleaned = expr.replace(/[^0-9+\-*/(). ]/g, "");
+  if (!cleaned.trim()) return 0;
+  // eslint-disable-next-line no-new-func
+  const v = Function(`"use strict"; return (${cleaned});`)();
+  return Number.isFinite(v) ? Number(v) : 0;
+}
+
+function evalFormulaForRow(formula: string, row: Row): number {
+  let f = formula.trim();
+  if (f.startsWith("=")) f = f.slice(1);
+  f = f.replace(/SUM\(/gi, "(");
+  f = f.replace(/D\d+/gi, row.Weight || "0");
+  f = f.replace(/E\d+/gi, row.Sets || "0");
+  f = f.replace(/F\d+/gi, row.Reps || "0");
+  f = f.replace(/G\d+/gi, row.Volume || "0");
+  return safeEvalMath(f);
+}
+
 function getPrefs() {
   return {
     googleClientId: el<HTMLInputElement>("googleClientId")?.value?.trim() || "",
@@ -33,7 +52,19 @@ function loadPrefs() {
 
 function normalize(row: Row): Row {
   const out = Object.fromEntries(COLS.map(c => [c, row[c] ?? ""])) as Row;
-  if (!out.Volume && out.Weight && out.Sets && out.Reps) out.Volume = String(num(out.Weight) * num(out.Sets) * num(out.Reps));
+
+  if (out.Formula?.includes("Weight=")) {
+    const m = out.Formula.match(/Weight=([^|]+)/);
+    if (m) out.Weight = String(evalFormulaForRow(m[1], out));
+  }
+  if (out.Formula?.includes("Volume=")) {
+    const m = out.Formula.match(/Volume=([^|]+)/);
+    if (m) out.Volume = String(evalFormulaForRow(m[1], out));
+  }
+
+  if (!out.Volume && out.Weight && out.Sets && out.Reps) {
+    out.Volume = String(num(out.Weight) * num(out.Sets) * num(out.Reps));
+  }
   return out;
 }
 
@@ -47,8 +78,8 @@ function renderTable() {
       input.value = r[c] ?? "";
       input.addEventListener("change", () => {
         rows[idx][c] = input.value;
-        if (["Weight","Sets","Reps"].includes(c)) {
-          rows[idx].Volume = String(num(rows[idx].Weight) * num(rows[idx].Sets) * num(rows[idx].Reps));
+        if (["Weight","Sets","Reps","Formula"].includes(c)) {
+          rows[idx] = normalize(rows[idx]);
           renderTable();
         }
         drawCharts();

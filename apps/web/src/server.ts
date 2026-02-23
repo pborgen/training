@@ -7,6 +7,7 @@ import { OAuth2Client } from "google-auth-library";
 const app = express();
 const port = Number(process.env.PORT || 8080);
 const googleClientId = process.env.GOOGLE_CLIENT_ID || "";
+const allowDevAuthHeaders = process.env.ALLOW_DEV_AUTH_HEADERS === "true";
 const verifier = new OAuth2Client(googleClientId || undefined);
 
 const root = process.cwd();
@@ -21,20 +22,30 @@ function safeId(email: string) {
 }
 
 async function identifyUser(req: express.Request): Promise<string | null> {
-  const devEmail = req.header("x-user-email");
-  if (devEmail) return devEmail;
-
   const auth = req.header("authorization") || "";
-  if (!auth.startsWith("Bearer ")) return null;
-  const token = auth.slice("Bearer ".length);
+  if (auth.startsWith("Bearer ")) {
+    const token = auth.slice("Bearer ".length);
+    if (!googleClientId) return null;
+    const ticket = await verifier.verifyIdToken({ idToken: token, audience: googleClientId });
+    const payload = ticket.getPayload();
+    return payload?.email || null;
+  }
 
-  if (!googleClientId) return null;
-  const ticket = await verifier.verifyIdToken({ idToken: token, audience: googleClientId });
-  const payload = ticket.getPayload();
-  return payload?.email || null;
+  if (allowDevAuthHeaders) {
+    const devEmail = req.header("x-user-email");
+    if (devEmail) return devEmail;
+  }
+
+  return null;
 }
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+app.get("/api/session", async (req, res) => {
+  const email = await identifyUser(req);
+  if (!email) return res.status(401).json({ ok: false, authenticated: false });
+  return res.json({ ok: true, authenticated: true, email });
+});
 
 app.get("/api/sync", async (req, res) => {
   try {

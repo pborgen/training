@@ -3,80 +3,60 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Training App</title>
-  <link rel="stylesheet" href="./styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <title>Training App — Stronger Every Week</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --brand: #1d4ed8;
+      --line: #334155;
+    }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 18px; }
+    .hero { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { color: var(--muted); line-height: 1.45; }
+    .cta { display: inline-block; margin-top: 10px; background: var(--brand); color: white; text-decoration: none; padding: 12px 16px; border-radius: 10px; font-weight: 700; }
+    .grid { display: grid; gap: 10px; margin-top: 12px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    .card h3 { margin: 0 0 6px; font-size: 16px; }
+    .small { font-size: 13px; color: var(--muted); }
+    @media (min-width: 800px) { .grid { grid-template-columns: 1fr 1fr; } }
+  </style>
 </head>
 <body>
-  <main>
-    <h1>Training</h1>
-
-    <section class="card">
-      <h2>Connection</h2>
-      <div class="stack">
-        <input id="syncEndpoint" placeholder="Sync endpoint URL" />
-        <input id="googleClientId" placeholder="Google Client ID" />
-        <span id="userLabel" class="hint">Not signed in</span>
-      </div>
-      <div class="actions">
-        <button id="googleSignInBtn">Google Sign-In</button>
-        <button id="sessionBtn">Session</button>
-        <button id="pullSyncBtn">Pull</button>
-        <button id="pushSyncBtn">Push</button>
-      </div>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Train Smart. Stay Strong. Keep It Simple.</h1>
+      <p>
+        Built for real life: busy schedules, aging joints, and goals that still matter.
+        This training app helps you track your workouts, monitor volume, and stay consistent
+        without turning fitness into a second job.
+      </p>
+      <a class="cta" href="/app.html">Open Training App</a>
+      <p class="small">No login required to explore the app interface.</p>
     </section>
 
-    <section class="card">
-      <h2>Data</h2>
-      <div class="stack">
-        <input id="xlsxInput" type="file" accept=".xlsx,.xls" />
-        <input id="importJsonInput" type="file" accept=".json" />
-      </div>
-      <div class="actions">
-        <button id="loadCsvBtn">Load CSV</button>
-        <button id="saveBtn">Save Local</button>
-        <button id="resetBtn">Reset</button>
-        <button id="exportJsonBtn">Export JSON</button>
-        <button id="addRowBtn">Add Row</button>
-      </div>
-      <p class="hint">Upload .xlsx to preserve formulas. Mobile-first row cards below mirror iOS edit flow.</p>
-    </section>
-
-    <section class="card" id="sessionCard">
-      <h2>Session Status</h2>
-      <div id="sessionStatus" class="status">Authenticated: No</div>
-      <div id="lastSync" class="status">Last Sync: -</div>
-      <div id="status" class="hint"></div>
-    </section>
-
-    <section class="card">
-      <h2>Workout Rows</h2>
-      <div id="workoutCards" class="cards"></div>
-    </section>
-
-    <section class="card desktop-only">
-      <h2>Desktop Table View</h2>
-      <table id="workoutTable">
-        <thead>
-          <tr>
-            <th>Phase</th><th>Order</th><th>Exercise</th><th>Weight</th><th>Sets</th><th>Reps</th><th>Volume</th><th>Notes</th><th>Formula</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <section class="card">
-      <h2>Charts</h2>
-      <div class="charts">
-        <canvas id="volumeByExercise"></canvas>
-        <canvas id="setsRepsSummary"></canvas>
-      </div>
+    <section class="grid">
+      <article class="card">
+        <h3>Mobile-First Workout Logging</h3>
+        <p>Quick row cards make it easy to update sets, reps, and weight from your phone at the gym.</p>
+      </article>
+      <article class="card">
+        <h3>Volume + Progress Visibility</h3>
+        <p>Built-in charts show your work over time so you can train with intent, not guesswork.</p>
+      </article>
+      <article class="card">
+        <h3>Spreadsheet Friendly</h3>
+        <p>Import your XLSX plan and keep formula context while moving to a cleaner day-to-day workflow.</p>
+      </article>
+      <article class="card">
+        <h3>Sync Ready</h3>
+        <p>Pull and push your training data with cloud sync endpoints when you’re ready for multi-device use.</p>
+      </article>
     </section>
   </main>
-
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="./dist/client/app.js"></script>
 </body>
 </html>

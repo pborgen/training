@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Training App</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Training</h1>
+
+    <section class="card">
+      <h2>Connection</h2>
+      <div class="stack">
+        <input id="syncEndpoint" placeholder="Sync endpoint URL" />
+        <input id="googleClientId" placeholder="Google Client ID" />
+        <span id="userLabel" class="hint">Not signed in</span>
+      </div>
+      <div class="actions">
+        <button id="googleSignInBtn">Google Sign-In</button>
+        <button id="sessionBtn">Session</button>
+        <button id="pullSyncBtn">Pull</button>
+        <button id="pushSyncBtn">Push</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Data</h2>
+      <div class="stack">
+        <input id="xlsxInput" type="file" accept=".xlsx,.xls" />
+        <input id="importJsonInput" type="file" accept=".json" />
+      </div>
+      <div class="actions">
+        <button id="loadCsvBtn">Load CSV</button>
+        <button id="saveBtn">Save Local</button>
+        <button id="resetBtn">Reset</button>
+        <button id="exportJsonBtn">Export JSON</button>
+        <button id="addRowBtn">Add Row</button>
+      </div>
+      <p class="hint">Upload .xlsx to preserve formulas. Mobile-first row cards below mirror iOS edit flow.</p>
+    </section>
+
+    <section class="card" id="sessionCard">
+      <h2>Session Status</h2>
+      <div id="sessionStatus" class="status">Authenticated: No</div>
+      <div id="lastSync" class="status">Last Sync: -</div>
+      <div id="status" class="hint"></div>
+    </section>
+
+    <section class="card">
+      <h2>Workout Rows</h2>
+      <div id="workoutCards" class="cards"></div>
+    </section>
+
+    <section class="card desktop-only">
+      <h2>Desktop Table View</h2>
+      <table id="workoutTable">
+        <thead>
+          <tr>
+            <th>Phase</th><th>Order</th><th>Exercise</th><th>Weight</th><th>Sets</th><th>Reps</th><th>Volume</th><th>Notes</th><th>Formula</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Charts</h2>
+      <div class="charts">
+        <canvas id="volumeByExercise"></canvas>
+        <canvas id="setsRepsSummary"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="./dist/client/app.js"></script>
+</body>
+</html>

@@ -39,6 +39,10 @@ async function identifyUser(req: express.Request): Promise<string | null> {
   return null;
 }
 
+app.get("/hello", (_req, res) => {
+  res.type("text/plain").send("hello from training app");
+});
+
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 app.get("/api/session", async (req, res) => {

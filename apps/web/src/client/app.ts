@@ -5,6 +5,7 @@ declare global {
     Chart: any;
     XLSX: any;
     google: any;
+    TrainingAuth: any;
   }
 }
 
@@ -15,7 +16,7 @@ const storageKey = "training_app_rows_v1";
 const prefsKey = "training_app_prefs_v1";
 let rows: Row[] = [];
 let volumeChart: any, summaryChart: any;
-let googleIdToken = "";
+let googleIdToken = window.TrainingAuth?.getAuth()?.idToken || "";
 
 const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -270,6 +271,10 @@ function googleSignIn() {
     client_id: clientId,
     callback: (resp: { credential: string }) => {
       googleIdToken = resp.credential;
+      try {
+        const payload = JSON.parse(atob(resp.credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+        window.TrainingAuth?.setAuth(resp.credential, payload.email || "");
+      } catch { /* ignore decode errors */ }
       el<HTMLElement>("userLabel").textContent = "Google sign-in connected";
       void sessionCheck();
     }
@@ -345,6 +350,12 @@ el<HTMLButtonElement>("sessionBtn").addEventListener("click", () => void session
 el<HTMLButtonElement>("pushSyncBtn").addEventListener("click", () => void pushSync());
 el<HTMLButtonElement>("pullSyncBtn").addEventListener("click", () => void pullSync());
 el<HTMLButtonElement>("addRowBtn").addEventListener("click", addRow);
+
+/* Auth guard: redirect to login if not authenticated */
+if (window.TrainingAuth && !window.TrainingAuth.getAuth()) {
+  window.location.href = "/login.html";
+  throw new Error("redirecting");
+}
 
 loadPrefs();
 if (!loadLocal()) void loadCsv();

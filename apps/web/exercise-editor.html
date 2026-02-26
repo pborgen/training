@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Training App — Exercises</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main>
+    <header class="dash-header">
+      <h1>Exercise Editor</h1>
+      <a href="/dashboard.html" class="btn-edit" style="text-decoration:none">Back</a>
+    </header>
+
+    <section class="card">
+      <h2>Add Exercise</h2>
+      <div class="stack">
+        <input id="exerciseName" placeholder="Exercise Name" />
+        <select id="exerciseType">
+          <option value="">Exercise Type</option>
+          <option value="strength">Strength</option>
+          <option value="cardio">Cardio</option>
+          <option value="flexibility">Flexibility</option>
+          <option value="bodyweight">Bodyweight</option>
+        </select>
+        <select id="muscleGroup">
+          <option value="">Muscle Group</option>
+          <option value="Quads">Quads</option>
+          <option value="Hamstrings">Hamstrings</option>
+          <option value="Glutes">Glutes</option>
+          <option value="Chest">Chest</option>
+          <option value="Back">Back</option>
+          <option value="Shoulders">Shoulders</option>
+          <option value="Arms">Arms</option>
+          <option value="Core">Core</option>
+          <option value="Full Body">Full Body</option>
+          <option value="Calves">Calves</option>
+          <option value="Posterior Chain">Posterior Chain</option>
+          <option value="Adductors">Adductors</option>
+          <option value="Abductors">Abductors</option>
+        </select>
+        <div class="row-grid">
+          <input id="defaultSets" type="number" placeholder="Sets" min="1" />
+          <input id="defaultReps" type="number" placeholder="Reps" min="1" />
+        </div>
+        <input id="defaultWeight" type="number" placeholder="Weight" min="0" />
+      </div>
+      <button id="addExerciseBtn" style="width:100%;margin-top:8px">Add Exercise</button>
+      <p id="status" class="hint"></p>
+    </section>
+
+    <section class="card">
+      <h2>My Exercises</h2>
+      <div id="exerciseList" class="cards"></div>
+      <p id="emptyMsg" class="hint" style="display:none">No custom exercises yet.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./dist/client/auth.js"></script>
+  <script type="module" src="./dist/client/api.js"></script>
+  <script type="module" src="./dist/client/exercise-editor.js"></script>
+</body>
+</html>

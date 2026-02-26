@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Training App — My Workouts</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main>
+    <header class="dash-header">
+      <h1>My Workouts</h1>
+      <div>
+        <span id="userInfo" class="hint">Loading...</span>
+        <button id="signOutBtn" class="small-btn" style="width:auto;margin:0 0 0 8px;padding:6px 14px">Sign Out</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Quick Actions</h2>
+      <div class="actions-nav">
+        <a href="/workout.html" class="action-link">Start Workout</a>
+        <a href="/routine-builder.html" class="action-link secondary">New Routine</a>
+        <a href="/exercise-editor.html" class="action-link secondary">Add Exercise</a>
+        <a href="/profile.html" class="action-link secondary">My Profile</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Saved Routines</h2>
+      <div id="routinesList" class="cards"></div>
+      <p id="routinesEmpty" class="hint" style="display:none">No routines yet. Create your first routine above.</p>
+    </section>
+
+    <section class="card">
+      <h2>My Exercises</h2>
+      <div id="exercisesList" class="cards"></div>
+      <p id="exercisesEmpty" class="hint" style="display:none">No custom exercises yet.</p>
+    </section>
+
+    <section class="card">
+      <h2>Recent Workouts</h2>
+      <div id="workoutHistory" class="cards"></div>
+      <p id="historyEmpty" class="hint" style="display:none">No workout history yet. Start a workout above.</p>
+    </section>
+
+    <section class="card" style="text-align:center">
+      <a href="/app.html" class="hint" style="text-decoration:underline">Open Legacy Spreadsheet Editor</a>
+    </section>
+  </main>
+
+  <script type="module" src="./dist/client/auth.js"></script>
+  <script type="module" src="./dist/client/api.js"></script>
+  <script type="module" src="./dist/client/dashboard.js"></script>
+</body>
+</html>

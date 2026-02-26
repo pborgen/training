@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Training App — Profile</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main>
+    <header class="dash-header">
+      <h1>Workout Profile</h1>
+      <a href="/dashboard.html" class="btn-edit" style="text-decoration:none">Back</a>
+    </header>
+
+    <section class="card">
+      <h2>User Information</h2>
+      <div class="stack">
+        <input id="fullName" placeholder="Full Name" />
+        <input id="age" type="number" placeholder="Age" min="1" max="120" />
+        <select id="gender">
+          <option value="">Select Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        <input id="heightCm" type="number" placeholder="Height (cm)" min="1" />
+        <input id="weightKg" type="number" placeholder="Weight" min="1" />
+        <select id="activityLevel">
+          <option value="">Select Activity Level</option>
+          <option value="sedentary">Sedentary</option>
+          <option value="light">Lightly Active</option>
+          <option value="moderate">Moderately Active</option>
+          <option value="active">Active</option>
+          <option value="very_active">Very Active</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Preferred Units</h2>
+      <div class="unit-toggle" id="unitToggle">
+        <button data-unit="lbs" class="active">lbs</button>
+        <button data-unit="kg">kg</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <button id="saveBtn" style="width:100%">Save Information</button>
+      <p id="status" class="hint"></p>
+    </section>
+  </main>
+
+  <script type="module" src="./dist/client/auth.js"></script>
+  <script type="module" src="./dist/client/api.js"></script>
+  <script type="module" src="./dist/client/profile.js"></script>
+</body>
+</html>

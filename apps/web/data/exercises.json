@@ -1,0 +1,101 @@
+[
+  {
+    "id": "barbell-back-squat",
+    "name": "Barbell Back Squat",
+    "muscleGroup": "Quads",
+    "category": "Lower Body",
+    "defaultWeight": 185,
+    "defaultSets": 5,
+    "defaultReps": 6
+  },
+  {
+    "id": "hack-squat",
+    "name": "Hack Squat",
+    "muscleGroup": "Quads",
+    "category": "Lower Body",
+    "defaultWeight": 126,
+    "defaultSets": 3,
+    "defaultReps": 8
+  },
+  {
+    "id": "deadlift",
+    "name": "Deadlift",
+    "muscleGroup": "Posterior Chain",
+    "category": "Lower Body",
+    "defaultWeight": 225,
+    "defaultSets": 3,
+    "defaultReps": 5
+  },
+  {
+    "id": "back-extension",
+    "name": "Back Extension",
+    "muscleGroup": "Lower Back",
+    "category": "Posterior Chain",
+    "defaultWeight": 141,
+    "defaultSets": 2,
+    "defaultReps": 10
+  },
+  {
+    "id": "lunges",
+    "name": "Lunges",
+    "muscleGroup": "Quads",
+    "category": "Lower Body",
+    "defaultWeight": 40,
+    "defaultSets": 3,
+    "defaultReps": 10
+  },
+  {
+    "id": "upright-cable-rows",
+    "name": "Upright Cable Rows",
+    "muscleGroup": "Shoulders",
+    "category": "Upper Body",
+    "defaultWeight": 60,
+    "defaultSets": 5,
+    "defaultReps": 8
+  },
+  {
+    "id": "hip-thrust",
+    "name": "Hip Thrust",
+    "muscleGroup": "Glutes",
+    "category": "Lower Body",
+    "defaultWeight": 135,
+    "defaultSets": 3,
+    "defaultReps": 8
+  },
+  {
+    "id": "overhead-press",
+    "name": "Overhead Press",
+    "muscleGroup": "Shoulders",
+    "category": "Upper Body",
+    "defaultWeight": 10,
+    "defaultSets": 3,
+    "defaultReps": 8
+  },
+  {
+    "id": "leg-press",
+    "name": "Leg Press",
+    "muscleGroup": "Quads",
+    "category": "Lower Body",
+    "defaultWeight": 126,
+    "defaultSets": 3,
+    "defaultReps": 8
+  },
+  {
+    "id": "adduction",
+    "name": "Adduction",
+    "muscleGroup": "Adductors",
+    "category": "Lower Body",
+    "defaultWeight": 150,
+    "defaultSets": 2,
+    "defaultReps": 10
+  },
+  {
+    "id": "abduction",
+    "name": "Abduction",
+    "muscleGroup": "Abductors",
+    "category": "Lower Body",
+    "defaultWeight": 150,
+    "defaultSets": 2,
+    "defaultReps": 10
+  }
+]

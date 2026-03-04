@@ -1,0 +1,383 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		010E290738D11F821B7DAAB7 /* RoutinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E528A145D3792CB7202B950 /* RoutinesView.swift */; };
+		12ACC997BEEA0C96DACD2103 /* WorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DD55C2317202BE1BA20CE8 /* WorkoutView.swift */; };
+		247F99D5E9754E35B69EC06C /* ExercisesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F258C8FF73A5D7E2FC21751 /* ExercisesView.swift */; };
+		336689AEDC72C6F312BABCCE /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73BBB2067642FCCB95F3927 /* APIClient.swift */; };
+		4CB9EA80269A472361E079EF /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140402AD9FE337AFC28AC66B /* ChartsView.swift */; };
+		6B15C14505CAD28DFA0527D5 /* GoogleSignInManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0550F6060609F02B0FC81191 /* GoogleSignInManager.swift */; };
+		78D2987E92D4801099212BDB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C854CAA2FA6DCDBC35672E39 /* ContentView.swift */; };
+		8E4551E531FE000F41ADC12C /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEAEEB22D93FDE16B536C99 /* Theme.swift */; };
+		8E9CF69DE55F67C2638070D8 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = B3F3649E2C6852CE4ACE838B /* GoogleSignIn */; };
+		B84ECE8314B0C7DB94ED3C1E /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3237EB7558FEBC6D4C85637 /* MainTabView.swift */; };
+		CCCF4CF29FF08D046B59F4B8 /* TrainingiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B766CC4E2BDBAA4EAAC4F2 /* TrainingiOSApp.swift */; };
+		D0B00489BF42A2FD17612835 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3AEAE7BCB30B3C2CAC8930 /* DashboardView.swift */; };
+		EACAA7FFED47D53F8A7539A1 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57917B2AC25506E45019F004 /* ProfileView.swift */; };
+		EDA70CF7126F70D5DB700B5B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DECE8A99EC5DA37914C6E009 /* Assets.xcassets */; };
+		F0276249400FEAF80BCB410C /* TrainingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8960CA06D7B32AD822241141 /* TrainingViewModel.swift */; };
+		F7C009311745AAC6C662449A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F5EA2D7BF122230EFD99CE /* Models.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0550F6060609F02B0FC81191 /* GoogleSignInManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleSignInManager.swift; sourceTree = "<group>"; };
+		0BEAEEB22D93FDE16B536C99 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		12348A92AF56EE3AB215EFF4 /* TrainingiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TrainingiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		140402AD9FE337AFC28AC66B /* ChartsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartsView.swift; sourceTree = "<group>"; };
+		1F258C8FF73A5D7E2FC21751 /* ExercisesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisesView.swift; sourceTree = "<group>"; };
+		3E528A145D3792CB7202B950 /* RoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesView.swift; sourceTree = "<group>"; };
+		50F5EA2D7BF122230EFD99CE /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		57917B2AC25506E45019F004 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		6A3AEAE7BCB30B3C2CAC8930 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		8960CA06D7B32AD822241141 /* TrainingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingViewModel.swift; sourceTree = "<group>"; };
+		96DD55C2317202BE1BA20CE8 /* WorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutView.swift; sourceTree = "<group>"; };
+		A0B766CC4E2BDBAA4EAAC4F2 /* TrainingiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingiOSApp.swift; sourceTree = "<group>"; };
+		C3237EB7558FEBC6D4C85637 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		C73BBB2067642FCCB95F3927 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		C854CAA2FA6DCDBC35672E39 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		DECE8A99EC5DA37914C6E009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		EB4ECCB2E09BDC3631786C48 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6FC9930D412F6B7137D230B9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8E9CF69DE55F67C2638070D8 /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6776474B5F7F52B7DBD7CB7F /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				C73BBB2067642FCCB95F3927 /* APIClient.swift */,
+				DECE8A99EC5DA37914C6E009 /* Assets.xcassets */,
+				140402AD9FE337AFC28AC66B /* ChartsView.swift */,
+				C854CAA2FA6DCDBC35672E39 /* ContentView.swift */,
+				6A3AEAE7BCB30B3C2CAC8930 /* DashboardView.swift */,
+				1F258C8FF73A5D7E2FC21751 /* ExercisesView.swift */,
+				0550F6060609F02B0FC81191 /* GoogleSignInManager.swift */,
+				EB4ECCB2E09BDC3631786C48 /* Info.plist */,
+				C3237EB7558FEBC6D4C85637 /* MainTabView.swift */,
+				50F5EA2D7BF122230EFD99CE /* Models.swift */,
+				57917B2AC25506E45019F004 /* ProfileView.swift */,
+				3E528A145D3792CB7202B950 /* RoutinesView.swift */,
+				0BEAEEB22D93FDE16B536C99 /* Theme.swift */,
+				A0B766CC4E2BDBAA4EAAC4F2 /* TrainingiOSApp.swift */,
+				8960CA06D7B32AD822241141 /* TrainingViewModel.swift */,
+				96DD55C2317202BE1BA20CE8 /* WorkoutView.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		D48A09EE7D00D3417F185AA7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				12348A92AF56EE3AB215EFF4 /* TrainingiOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FA90BC8C69B06EB4D23AC070 = {
+			isa = PBXGroup;
+			children = (
+				6776474B5F7F52B7DBD7CB7F /* Sources */,
+				D48A09EE7D00D3417F185AA7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		89CD47882FE7773F4DCA1F25 /* TrainingiOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 56107DA2E0A333743AFD8494 /* Build configuration list for PBXNativeTarget "TrainingiOS" */;
+			buildPhases = (
+				518448AC50371D7B06BF9191 /* Sources */,
+				D9EDE96545282E274F5505ED /* Resources */,
+				6FC9930D412F6B7137D230B9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TrainingiOS;
+			packageProductDependencies = (
+				B3F3649E2C6852CE4ACE838B /* GoogleSignIn */,
+			);
+			productName = TrainingiOS;
+			productReference = 12348A92AF56EE3AB215EFF4 /* TrainingiOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2522229BB2C4E751F2C6436C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+			};
+			buildConfigurationList = FBE6DB6A52A4DC8710701959 /* Build configuration list for PBXProject "TrainingiOS" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = FA90BC8C69B06EB4D23AC070;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D4491DBC10C1A8D1396332C4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				89CD47882FE7773F4DCA1F25 /* TrainingiOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D9EDE96545282E274F5505ED /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDA70CF7126F70D5DB700B5B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		518448AC50371D7B06BF9191 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				336689AEDC72C6F312BABCCE /* APIClient.swift in Sources */,
+				4CB9EA80269A472361E079EF /* ChartsView.swift in Sources */,
+				78D2987E92D4801099212BDB /* ContentView.swift in Sources */,
+				D0B00489BF42A2FD17612835 /* DashboardView.swift in Sources */,
+				247F99D5E9754E35B69EC06C /* ExercisesView.swift in Sources */,
+				6B15C14505CAD28DFA0527D5 /* GoogleSignInManager.swift in Sources */,
+				B84ECE8314B0C7DB94ED3C1E /* MainTabView.swift in Sources */,
+				F7C009311745AAC6C662449A /* Models.swift in Sources */,
+				EACAA7FFED47D53F8A7539A1 /* ProfileView.swift in Sources */,
+				010E290738D11F821B7DAAB7 /* RoutinesView.swift in Sources */,
+				8E4551E531FE000F41ADC12C /* Theme.swift in Sources */,
+				F0276249400FEAF80BCB410C /* TrainingViewModel.swift in Sources */,
+				CCCF4CF29FF08D046B59F4B8 /* TrainingiOSApp.swift in Sources */,
+				12ACC997BEEA0C96DACD2103 /* WorkoutView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		07403AEA310DCFFC75C8FD8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.pborgen.training;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		13D40DE21AF07B0132712A5D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		28DDB1A85E242F539C95F630 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		2CF91F75D62E3FCF8F4CF858 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.pborgen.training;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		56107DA2E0A333743AFD8494 /* Build configuration list for PBXNativeTarget "TrainingiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2CF91F75D62E3FCF8F4CF858 /* Debug */,
+				07403AEA310DCFFC75C8FD8A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FBE6DB6A52A4DC8710701959 /* Build configuration list for PBXProject "TrainingiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				28DDB1A85E242F539C95F630 /* Debug */,
+				13D40DE21AF07B0132712A5D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D4491DBC10C1A8D1396332C4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B3F3649E2C6852CE4ACE838B /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D4491DBC10C1A8D1396332C4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2522229BB2C4E751F2C6436C /* Project object */;
+}

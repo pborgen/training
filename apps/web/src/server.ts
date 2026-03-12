@@ -16,7 +16,9 @@ const usersDir = path.join(root, "data", "users");
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
-app.use(express.static(root));
+
+const clientDir = path.join(root, "dist", "client");
+app.use(express.static(clientDir));
 
 /* ── Helpers ────────────────────────────────── */
 
@@ -335,6 +337,12 @@ app.get("/api/workout-log/:id", async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
+});
+
+/* ── SPA Fallback ──────────────────────────── */
+
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(clientDir, "index.html"));
 });
 
 /* ── Start ──────────────────────────────────── */

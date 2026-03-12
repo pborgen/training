@@ -4,19 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.server.json && vite build",
+    "build:server": "tsc -p tsconfig.server.json",
     "dev": "tsx src/server.ts",
+    "dev:client": "vite --config vite.config.ts",
     "start": "npm run build && node dist/server.js"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-router": "^1.166.7",
+    "@vitejs/plugin-react": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.1",
-    "google-auth-library": "^9.14.2"
+    "google-auth-library": "^9.14.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "vite": "^8.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }

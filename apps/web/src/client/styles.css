@@ -1,0 +1,382 @@
+/* ── Reset & Base ─────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+:root {
+  --bg: #0b1220;
+  --card: #111827;
+  --input: #0f172a;
+  --accent: #1d4ed8;
+  --accent-hover: #2563eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --secondary: #374151;
+  --text: #e5e7eb;
+  --hint: #94a3b8;
+  --border: #334155;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ──────────────────────────── */
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px 12px 80px;
+}
+main.with-nav {
+  padding-top: 56px;
+  padding-bottom: 80px;
+}
+
+.page { display: grid; gap: 12px; }
+.page h1 { font-size: 22px; margin: 4px 0; }
+.page h2 { font-size: 15px; margin: 0 0 8px; }
+
+/* ── App Header ──────────────────────── */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  z-index: 50;
+}
+.app-title { font-weight: 700; font-size: 16px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.user-email { font-size: 12px; color: var(--hint); }
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--hint);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ── Bottom Nav ──────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 50;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--hint);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-item.active { color: var(--accent); }
+.nav-icon { font-size: 20px; }
+.nav-label { font-weight: 600; }
+
+/* ── Cards ───────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.row-card {
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.row-card:last-child { margin-bottom: 0; }
+.row-card-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.row-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* ── Forms ────────────────────────────── */
+input, select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input);
+  color: var(--text);
+  font-size: 15px;
+  min-height: 44px;
+}
+input::placeholder { color: var(--hint); }
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-stack { display: grid; gap: 10px; }
+.form-label { display: grid; gap: 4px; font-size: 13px; color: var(--hint); }
+.form-label-text { font-size: 13px; color: var(--hint); margin-bottom: 4px; display: block; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+/* ── Buttons ─────────────────────────── */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  min-height: 44px;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.6; }
+
+.btn-secondary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--secondary);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  min-height: 44px;
+}
+.btn-secondary:hover { background: #4b5563; }
+
+.btn-success {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--success);
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  min-height: 44px;
+}
+.btn-success:hover { background: #15803d; }
+
+.btn-full { width: 100%; }
+.btn-lg { padding: 16px 24px; font-size: 16px; }
+
+.btn-edit {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+.btn-delete {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--danger);
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+.btn-row { display: flex; gap: 6px; margin-top: 8px; }
+
+/* ── Badge ───────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  margin-left: 6px;
+}
+
+/* ── Utility ─────────────────────────── */
+.hint { color: var(--hint); font-size: 12px; }
+.block { display: block; margin-top: 2px; }
+strong { font-weight: 600; }
+
+/* ── Unit Toggle ─────────────────────── */
+.unit-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.unit-toggle button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 0;
+  background: var(--input);
+  color: var(--hint);
+  font-weight: 600;
+  min-height: 44px;
+}
+.unit-toggle button.active {
+  background: var(--accent);
+  color: white;
+}
+
+/* ── Dashboard Actions Grid ──────────── */
+.actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+  min-height: 80px;
+}
+.action-card.primary {
+  background: rgba(29, 78, 216, 0.15);
+  border-color: rgba(29, 78, 216, 0.3);
+  color: var(--accent);
+}
+.action-icon { font-size: 22px; }
+
+/* ── Workout ─────────────────────────── */
+.workout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.workout-exercise-card h2 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.sets-container { margin-top: 12px; }
+.set-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.set-row .hint {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ── Landing Page ────────────────────── */
+.landing { text-align: center; }
+.hero {
+  padding: 60px 16px 40px;
+}
+.hero h1 {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+.hero-sub {
+  color: var(--hint);
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.hero-actions button {
+  width: auto;
+  min-width: 140px;
+}
+.features {
+  display: grid;
+  gap: 12px;
+  padding: 0 12px 40px;
+}
+.feature-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: left;
+}
+.feature-card h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.feature-card p {
+  color: var(--hint);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ── Login ───────────────────────────── */
+.login-container {
+  max-width: 380px;
+  margin: 80px auto 0;
+  padding: 0 16px;
+  text-align: center;
+}
+.login-container h1 {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+/* ── Tablet+ ─────────────────────────── */
+@media (min-width: 768px) {
+  main { max-width: 720px; padding: 16px 16px 80px; }
+  .features { grid-template-columns: 1fr 1fr; }
+  .hero h1 { font-size: 48px; }
+}
+
+@media (min-width: 1024px) {
+  main { max-width: 860px; }
+  .bottom-nav { display: none; }
+  main.with-nav { padding-bottom: 16px; }
+  .app-header { justify-content: center; }
+  .app-title { position: absolute; left: 16px; }
+  .header-right { position: absolute; right: 16px; }
+}

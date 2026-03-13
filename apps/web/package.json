@@ -6,9 +6,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.server.json && vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "dev": "tsx src/server.ts",
+    "dev": "trap 'kill 0' EXIT; tsx watch --env-file=.env src/server.ts & vite --config vite.config.ts & wait",
+    "dev:server": "tsx watch --env-file=.env src/server.ts",
     "dev:client": "vite --config vite.config.ts",
-    "start": "npm run build && node dist/server.js"
+    "start": "npm run build && node dist/server.js",
+    "vercel-build": "tsc -p tsconfig.server.json && vite build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
@@ -17,6 +19,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "google-auth-library": "^9.14.2",
+    "postgres": "^3.4.8",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "vite": "^8.0.0"

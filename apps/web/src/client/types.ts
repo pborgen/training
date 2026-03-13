@@ -2,6 +2,7 @@ export interface AuthState {
   idToken: string;
   email: string;
   authenticatedAt: string;
+  devMode?: boolean;
 }
 
 export interface UserProfile {
@@ -74,4 +75,16 @@ export interface WorkoutLogEntry {
   startedAt: string;
   completedAt: string;
   exercises: ExerciseLog[];
+}
+
+export interface ReadinessCheckin {
+  id: string;
+  sleepQuality: number;
+  energy: number;
+  stress: number;
+  mood: number;
+  soreness: number;
+  motivation: number;
+  notes: string;
+  createdAt: string;
 }

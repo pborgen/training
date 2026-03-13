@@ -7,7 +7,7 @@ const PREFS_KEY = "training_app_prefs_v1";
 interface AuthContextValue {
   user: AuthState | null;
   isAuthenticated: boolean;
-  signIn: (idToken: string, email: string) => void;
+  signIn: (idToken: string, email: string, devMode?: boolean) => void;
   signOut: () => void;
   getGoogleClientId: () => string;
   setGoogleClientId: (id: string) => void;
@@ -35,8 +35,8 @@ function loadPrefs(): Record<string, string> {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthState | null>(loadAuth);
 
-  const signIn = useCallback((idToken: string, email: string) => {
-    const state: AuthState = { idToken, email, authenticatedAt: new Date().toISOString() };
+  const signIn = useCallback((idToken: string, email: string, devMode?: boolean) => {
+    const state: AuthState = { idToken, email, authenticatedAt: new Date().toISOString(), devMode };
     localStorage.setItem(AUTH_KEY, JSON.stringify(state));
     setUser(state);
   }, []);

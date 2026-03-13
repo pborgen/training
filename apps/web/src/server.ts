@@ -1,18 +1,26 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import express from "express";
 import cors from "cors";
 import { OAuth2Client } from "google-auth-library";
+import {
+  ensureTables, seedExercises, ensureProfile,
+  getProfile, upsertProfile,
+  getCatalogExercises,
+  getUserExercises, createUserExercise, updateUserExercise, deleteUserExercise,
+  getRoutines, getRoutine, createRoutine, updateRoutine, deleteRoutine,
+  getWorkoutLog, createWorkoutLog, getWorkoutLogEntry,
+  getReadinessCheckins, createReadinessCheckin, deleteReadinessCheckin,
+  getUserByUsername, seedDevUsers,
+} from "./db.js";
 
-const app = express();
+export const app = express();
 const port = Number(process.env.PORT || 8080);
 const googleClientId = process.env.GOOGLE_CLIENT_ID || "";
 const allowDevAuthHeaders = process.env.ALLOW_DEV_AUTH_HEADERS === "true";
 const verifier = new OAuth2Client(googleClientId || undefined);
 
 const root = process.cwd();
-const usersDir = path.join(root, "data", "users");
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -22,48 +30,7 @@ app.use(express.static(clientDir));
 
 /* ── Helpers ────────────────────────────────── */
 
-function safeId(email: string) {
-  return (email || "unknown").toLowerCase().replace(/[^a-z0-9._-]/g, "_");
-}
-
 function uuid() { return crypto.randomUUID(); }
-
-interface UserData {
-  user: string;
-  syncedAt: string | null;
-  profile: Record<string, unknown> | null;
-  exercises: Record<string, unknown>[];
-  routines: Record<string, unknown>[];
-  workoutLog: Record<string, unknown>[];
-  rows: Record<string, string>[];
-}
-
-async function loadUserData(email: string): Promise<UserData> {
-  await fs.mkdir(usersDir, { recursive: true });
-  const file = path.join(usersDir, `${safeId(email)}.json`);
-  try {
-    const raw = await fs.readFile(file, "utf8");
-    const data = JSON.parse(raw);
-    return {
-      user: email,
-      syncedAt: data.syncedAt ?? null,
-      profile: data.profile ?? null,
-      exercises: Array.isArray(data.exercises) ? data.exercises : [],
-      routines: Array.isArray(data.routines) ? data.routines : [],
-      workoutLog: Array.isArray(data.workoutLog) ? data.workoutLog : [],
-      rows: Array.isArray(data.rows) ? data.rows : [],
-    };
-  } catch {
-    return { user: email, syncedAt: null, profile: null, exercises: [], routines: [], workoutLog: [], rows: [] };
-  }
-}
-
-async function saveUserData(email: string, data: UserData): Promise<void> {
-  await fs.mkdir(usersDir, { recursive: true });
-  data.syncedAt = new Date().toISOString();
-  const file = path.join(usersDir, `${safeId(email)}.json`);
-  await fs.writeFile(file, JSON.stringify(data, null, 2));
-}
 
 async function identifyUser(req: express.Request): Promise<string | null> {
   const auth = req.header("authorization") || "";
@@ -85,11 +52,41 @@ async function requireUser(req: express.Request, res: express.Response): Promise
   try {
     const email = await identifyUser(req);
     if (!email) { res.status(401).json({ error: "Unauthorized" }); return null; }
+    await ensureProfile(email);
     return email;
   } catch {
     res.status(401).json({ error: "Unauthorized" }); return null;
   }
 }
+
+/* ── Dev mode accounts ─────────────────────── */
+
+const DEV_ACCOUNTS = [
+  { email: "admin@dev.local", name: "Admin", role: "admin" },
+  { email: "paul@dev.local", name: "Paul", role: "client" },
+  { email: "diego@dev.local", name: "Diego", role: "client" },
+];
+
+app.get("/api/dev/accounts", (_req, res) => {
+  if (!allowDevAuthHeaders) return res.status(404).json({ error: "Not found" });
+  res.json(DEV_ACCOUNTS);
+});
+
+/* ── Username/Password login ─────────────────── */
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: "Username and password required" });
+    const user = await getUserByUsername(username);
+    if (!user) return res.status(401).json({ error: "Invalid username or password" });
+    const hash = crypto.createHash("sha256").update(password).digest("hex");
+    if (hash !== user.passwordHash) return res.status(401).json({ error: "Invalid username or password" });
+    res.json({ ok: true, email: user.email, role: user.role, username: user.username });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
 
 /* ── Public endpoints ───────────────────────── */
 
@@ -101,11 +98,9 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 app.get("/api/exercises", async (_req, res) => {
   try {
-    const filePath = path.join(root, "data", "exercises.json");
-    const raw = await fs.readFile(filePath, "utf8");
-    res.json(JSON.parse(raw));
-  } catch {
-    res.status(500).json({ error: "Failed to load exercise catalog" });
+    res.json(await getCatalogExercises());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
   }
 });
 
@@ -117,44 +112,13 @@ app.get("/api/session", async (req, res) => {
   return res.json({ ok: true, authenticated: true, email });
 });
 
-/* ── Sync (legacy + expanded) ───────────────── */
-
-app.get("/api/sync", async (req, res) => {
-  try {
-    const email = await requireUser(req, res);
-    if (!email) return;
-    const data = await loadUserData(email);
-    return res.json(data);
-  } catch (e) {
-    return res.status(500).json({ error: (e as Error).message });
-  }
-});
-
-app.post("/api/sync", async (req, res) => {
-  try {
-    const email = await requireUser(req, res);
-    if (!email) return;
-    const data = await loadUserData(email);
-    if (Array.isArray(req.body?.rows)) data.rows = req.body.rows;
-    if (req.body?.profile) data.profile = req.body.profile;
-    if (Array.isArray(req.body?.exercises)) data.exercises = req.body.exercises;
-    if (Array.isArray(req.body?.routines)) data.routines = req.body.routines;
-    if (Array.isArray(req.body?.workoutLog)) data.workoutLog = req.body.workoutLog;
-    await saveUserData(email, data);
-    res.json({ ok: true, ...data });
-  } catch (e) {
-    res.status(500).json({ error: (e as Error).message });
-  }
-});
-
 /* ── Profile ────────────────────────────────── */
 
 app.get("/api/profile", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    res.json(data.profile || {});
+    res.json(await getProfile(email));
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -164,10 +128,8 @@ app.put("/api/profile", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    data.profile = req.body;
-    await saveUserData(email, data);
-    res.json({ ok: true, profile: data.profile });
+    await upsertProfile(email, req.body);
+    res.json({ ok: true, profile: await getProfile(email) });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -179,8 +141,7 @@ app.get("/api/user-exercises", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    res.json(data.exercises);
+    res.json(await getUserExercises(email));
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -190,10 +151,8 @@ app.post("/api/user-exercises", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    const exercise = { ...req.body, id: req.body.id || uuid(), createdAt: new Date().toISOString() };
-    data.exercises.push(exercise);
-    await saveUserData(email, data);
+    const id = req.body.id || uuid();
+    const exercise = await createUserExercise(email, req.body, id);
     res.json({ ok: true, exercise });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
@@ -204,12 +163,9 @@ app.put("/api/user-exercises/:id", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    const idx = data.exercises.findIndex((e: any) => e.id === req.params.id);
-    if (idx === -1) return res.status(404).json({ error: "Exercise not found" });
-    data.exercises[idx] = { ...data.exercises[idx], ...req.body, id: req.params.id };
-    await saveUserData(email, data);
-    res.json({ ok: true, exercise: data.exercises[idx] });
+    const exercise = await updateUserExercise(email, req.params.id, req.body);
+    if (!exercise) return res.status(404).json({ error: "Exercise not found" });
+    res.json({ ok: true, exercise });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -219,9 +175,7 @@ app.delete("/api/user-exercises/:id", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    data.exercises = data.exercises.filter((e: any) => e.id !== req.params.id);
-    await saveUserData(email, data);
+    await deleteUserExercise(email, req.params.id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
@@ -234,8 +188,7 @@ app.get("/api/routines", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    res.json(data.routines);
+    res.json(await getRoutines(email));
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -245,8 +198,7 @@ app.get("/api/routines/:id", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    const routine = data.routines.find((r: any) => r.id === req.params.id);
+    const routine = await getRoutine(email, req.params.id);
     if (!routine) return res.status(404).json({ error: "Routine not found" });
     res.json(routine);
   } catch (e) {
@@ -258,11 +210,8 @@ app.post("/api/routines", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    const now = new Date().toISOString();
-    const routine = { ...req.body, id: req.body.id || uuid(), createdAt: now, updatedAt: now };
-    data.routines.push(routine);
-    await saveUserData(email, data);
+    const id = req.body.id || uuid();
+    const routine = await createRoutine(email, req.body, id);
     res.json({ ok: true, routine });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
@@ -273,12 +222,9 @@ app.put("/api/routines/:id", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    const idx = data.routines.findIndex((r: any) => r.id === req.params.id);
-    if (idx === -1) return res.status(404).json({ error: "Routine not found" });
-    data.routines[idx] = { ...data.routines[idx], ...req.body, id: req.params.id, updatedAt: new Date().toISOString() };
-    await saveUserData(email, data);
-    res.json({ ok: true, routine: data.routines[idx] });
+    const routine = await updateRoutine(email, req.params.id, req.body);
+    if (!routine) return res.status(404).json({ error: "Routine not found" });
+    res.json({ ok: true, routine });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -288,9 +234,7 @@ app.delete("/api/routines/:id", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    data.routines = data.routines.filter((r: any) => r.id !== req.params.id);
-    await saveUserData(email, data);
+    await deleteRoutine(email, req.params.id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
@@ -303,10 +247,8 @@ app.get("/api/workout-log", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
     const limit = Number(req.query.limit) || 0;
-    const logs = limit > 0 ? data.workoutLog.slice(-limit) : data.workoutLog;
-    res.json(logs);
+    res.json(await getWorkoutLog(email, limit));
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -316,10 +258,8 @@ app.post("/api/workout-log", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    const entry = { ...req.body, id: req.body.id || uuid() };
-    data.workoutLog.push(entry);
-    await saveUserData(email, data);
+    const id = req.body.id || uuid();
+    const entry = await createWorkoutLog(email, req.body, id);
     res.json({ ok: true, entry });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
@@ -330,10 +270,45 @@ app.get("/api/workout-log/:id", async (req, res) => {
   try {
     const email = await requireUser(req, res);
     if (!email) return;
-    const data = await loadUserData(email);
-    const entry = data.workoutLog.find((e: any) => e.id === req.params.id);
+    const entry = await getWorkoutLogEntry(email, req.params.id);
     if (!entry) return res.status(404).json({ error: "Log entry not found" });
     res.json(entry);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/* ── Readiness Check-ins ───────────────────── */
+
+app.get("/api/readiness", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const limit = Number(req.query.limit) || 0;
+    res.json(await getReadinessCheckins(email, limit));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.post("/api/readiness", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const id = req.body.id || uuid();
+    const checkin = await createReadinessCheckin(email, req.body, id);
+    res.json({ ok: true, checkin });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.delete("/api/readiness/:id", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    await deleteReadinessCheckin(email, req.params.id);
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -347,6 +322,13 @@ app.get("*", (_req, res) => {
 
 /* ── Start ──────────────────────────────────── */
 
-app.listen(port, () => {
-  console.log(`Training app running on http://localhost:${port}`);
-});
+if (!process.env.VERCEL) {
+  (async () => {
+    await ensureTables();
+    await seedExercises();
+    await seedDevUsers();
+    app.listen(port, () => {
+      console.log(`Training app running on http://localhost:${port}`);
+    });
+  })();
+}

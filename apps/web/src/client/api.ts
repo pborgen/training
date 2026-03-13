@@ -4,6 +4,7 @@ import type {
   UserExercise,
   Routine,
   WorkoutLogEntry,
+  ReadinessCheckin,
 } from "./types";
 
 const AUTH_KEY = "training_app_auth_v1";
@@ -14,11 +15,19 @@ function authHeaders(): Record<string, string> {
     const raw = localStorage.getItem(AUTH_KEY);
     if (raw) {
       const auth = JSON.parse(raw);
-      if (auth?.idToken) h["Authorization"] = `Bearer ${auth.idToken}`;
+      if (auth?.devMode) {
+        h["x-user-email"] = auth.email;
+      } else if (auth?.idToken) {
+        h["Authorization"] = `Bearer ${auth.idToken}`;
+      }
     }
   } catch { /* no auth */ }
   return h;
 }
+
+// Dev accounts
+export interface DevAccount { email: string; name: string; role: string; }
+export const fetchDevAccounts = () => fetch("/api/dev/accounts").then(r => r.ok ? r.json() as Promise<DevAccount[]> : null);
 
 async function apiFetch<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(path, {
@@ -57,5 +66,15 @@ export const deleteRoutine = (id: string) => apiFetch<{ ok: boolean }>("DELETE",
 export const fetchWorkoutLog = (limit = 0) => apiFetch<WorkoutLogEntry[]>("GET", limit ? `/api/workout-log?limit=${limit}` : "/api/workout-log");
 export const saveWorkoutLog = (entry: Omit<WorkoutLogEntry, "id">) => apiFetch<{ ok: boolean; entry: WorkoutLogEntry }>("POST", "/api/workout-log", entry);
 
+// Readiness Check-ins
+export const fetchReadiness = (limit = 0) => apiFetch<ReadinessCheckin[]>("GET", limit ? `/api/readiness?limit=${limit}` : "/api/readiness");
+export const saveReadiness = (c: Omit<ReadinessCheckin, "id" | "createdAt">) => apiFetch<{ ok: boolean; checkin: ReadinessCheckin }>("POST", "/api/readiness", c);
+export const deleteReadiness = (id: string) => apiFetch<{ ok: boolean }>("DELETE", `/api/readiness/${id}`);
+
 // Session
 export const checkSession = () => apiFetch<{ authenticated: boolean; email?: string }>("GET", "/api/session");
+
+// Login
+export const loginWithCredentials = (username: string, password: string) =>
+  fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) })
+    .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error || "Login failed"); return data as { ok: boolean; email: string; role: string; username: string }; });

@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: "home" },
   { to: "/workout", label: "Workout", icon: "play" },
+  { to: "/readiness", label: "Readiness", icon: "readiness" },
   { to: "/exercises", label: "Exercises", icon: "exercise" },
   { to: "/profile", label: "Profile", icon: "person" },
 ] as const;
@@ -11,6 +12,7 @@ const NAV_ITEMS = [
 const ICONS: Record<string, string> = {
   home: "\u2302",
   play: "\u25B6",
+  readiness: "\u2665",
   exercise: "\u2660",
   person: "\u263A",
 };

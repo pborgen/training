@@ -11,7 +11,8 @@ import {
   getRoutines, getRoutine, createRoutine, updateRoutine, deleteRoutine,
   getWorkoutLog, createWorkoutLog, getWorkoutLogEntry,
   getReadinessCheckins, createReadinessCheckin, deleteReadinessCheckin,
-  getUserByUsername, seedDevUsers,
+  getUserByUsername, seedDevUsers, getUserRole, getAllUsers, ensureGoogleUser,
+  getAllLabels, createLabel, updateLabel, deleteLabel, getLabelsForAllUsers, setUserLabels,
 } from "./db.js";
 
 export const app = express();
@@ -86,6 +87,118 @@ app.post("/api/login", async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
+});
+
+/* ── Admin endpoints ──────────────────────── */
+
+async function requireAdmin(req: express.Request, res: express.Response): Promise<string | null> {
+  const email = await requireUser(req, res);
+  if (!email) return null;
+  const role = await getUserRole(email);
+  if (role !== "admin") { res.status(403).json({ error: "Forbidden" }); return null; }
+  return email;
+}
+
+app.get("/api/admin/users", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    res.json(await getAllUsers());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/* ── Labels (admin) ──────────────────────── */
+
+app.get("/api/admin/labels", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    res.json(await getAllLabels());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.post("/api/admin/labels", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const { name, color } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: "Name required" });
+    const id = crypto.randomUUID();
+    const label = await createLabel(id, name.trim(), color || "#00c896");
+    res.json({ ok: true, label });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.put("/api/admin/labels/:id", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const { name, color } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: "Name required" });
+    const label = await updateLabel(req.params.id, name.trim(), color || "#00c896");
+    if (!label) return res.status(404).json({ error: "Label not found" });
+    res.json({ ok: true, label });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.delete("/api/admin/labels/:id", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    await deleteLabel(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.get("/api/admin/user-labels", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    res.json(await getLabelsForAllUsers());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.put("/api/admin/users/:email/labels", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const { labelIds } = req.body;
+    if (!Array.isArray(labelIds)) return res.status(400).json({ error: "labelIds array required" });
+    await setUserLabels(decodeURIComponent(req.params.email), labelIds);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/* ── Google auth ────────────────────────────── */
+
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ error: "Missing credential" });
+    if (!googleClientId) return res.status(500).json({ error: "Google auth not configured" });
+    const ticket = await verifier.verifyIdToken({ idToken: credential, audience: googleClientId });
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+    if (!email) return res.status(401).json({ error: "No email in token" });
+    await ensureProfile(email);
+    const role = await getUserRole(email);
+    res.json({ ok: true, email, role });
+  } catch (e) {
+    res.status(401).json({ error: "Invalid Google token" });
+  }
+});
+
+/* ── Auth config ────────────────────────────── */
+
+app.get("/api/auth/config", (_req, res) => {
+  res.json({ googleClientId: googleClientId || null });
 });
 
 /* ── Public endpoints ───────────────────────── */

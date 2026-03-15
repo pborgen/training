@@ -101,6 +101,22 @@ export async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT now()
     )
   `;
+  await sql()`
+    CREATE TABLE IF NOT EXISTS labels (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      color TEXT DEFAULT '#00c896',
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql()`
+    CREATE TABLE IF NOT EXISTS user_labels (
+      email TEXT NOT NULL REFERENCES profiles(email),
+      label_id TEXT NOT NULL REFERENCES labels(id) ON DELETE CASCADE,
+      assigned_at TIMESTAMPTZ DEFAULT now(),
+      PRIMARY KEY (email, label_id)
+    )
+  `;
 }
 
 /* ── Seed catalog exercises ─────────────────── */
@@ -142,6 +158,21 @@ export async function createUser(username: string, passwordHash: string, email: 
   `;
 }
 
+export async function ensureGoogleUser(email: string, fullName?: string) {
+  await ensureProfile(email);
+  if (fullName) {
+    await sql()`UPDATE profiles SET full_name = ${fullName} WHERE email = ${email} AND full_name = ''`;
+  }
+  const existing = await sql()`SELECT email FROM users WHERE email = ${email}`;
+  if (existing.length > 0) return;
+  const username = email.split("@")[0];
+  await sql()`
+    INSERT INTO users (username, password_hash, email, role)
+    VALUES (${username}, 'google-oauth', ${email}, 'client')
+    ON CONFLICT (username) DO NOTHING
+  `;
+}
+
 export async function getUserByUsername(username: string) {
   const rows = await sql()`SELECT * FROM users WHERE username = ${username}`;
   return rows[0] ? { username: rows[0].username as string, passwordHash: rows[0].password_hash as string, email: rows[0].email as string, role: rows[0].role as string } : null;
@@ -159,6 +190,83 @@ export async function seedDevUsers() {
   for (const u of devUsers) {
     const hash = (await import("node:crypto")).createHash("sha256").update(u.password).digest("hex");
     await createUser(u.username, hash, u.email, u.role);
+  }
+}
+
+export async function getUserRole(email: string): Promise<string> {
+  const rows = await sql()`SELECT role FROM users WHERE email = ${email}`;
+  return rows[0]?.role as string || "client";
+}
+
+export async function getAllUsers() {
+  const rows = await sql()`
+    SELECT u.username, u.email, u.role, u.created_at,
+           p.full_name, p.age, p.gender
+    FROM users u
+    LEFT JOIN profiles p ON u.email = p.email
+    ORDER BY u.role, u.username
+  `;
+  return rows.map(r => ({
+    username: r.username,
+    email: r.email,
+    role: r.role,
+    fullName: r.full_name || "",
+    age: r.age || 0,
+    gender: r.gender || "",
+    createdAt: r.created_at,
+  }));
+}
+
+/* ── Labels ────────────────────────────────── */
+
+export async function getAllLabels() {
+  const rows = await sql()`SELECT * FROM labels ORDER BY name`;
+  return rows.map(r => ({ id: r.id as string, name: r.name as string, color: r.color as string, createdAt: r.created_at }));
+}
+
+export async function createLabel(id: string, name: string, color: string) {
+  await sql()`INSERT INTO labels (id, name, color) VALUES (${id}, ${name}, ${color})`;
+  return { id, name, color };
+}
+
+export async function updateLabel(id: string, name: string, color: string) {
+  const rows = await sql()`UPDATE labels SET name = ${name}, color = ${color} WHERE id = ${id} RETURNING *`;
+  return rows[0] ? { id: rows[0].id as string, name: rows[0].name as string, color: rows[0].color as string } : null;
+}
+
+export async function deleteLabel(id: string) {
+  await sql()`DELETE FROM labels WHERE id = ${id}`;
+}
+
+export async function getLabelsForUser(email: string) {
+  const rows = await sql()`
+    SELECT l.id, l.name, l.color FROM labels l
+    JOIN user_labels ul ON l.id = ul.label_id
+    WHERE ul.email = ${email}
+    ORDER BY l.name
+  `;
+  return rows.map(r => ({ id: r.id as string, name: r.name as string, color: r.color as string }));
+}
+
+export async function getLabelsForAllUsers() {
+  const rows = await sql()`
+    SELECT ul.email, l.id, l.name, l.color FROM user_labels ul
+    JOIN labels l ON l.id = ul.label_id
+    ORDER BY l.name
+  `;
+  const map: Record<string, { id: string; name: string; color: string }[]> = {};
+  for (const r of rows) {
+    const email = r.email as string;
+    if (!map[email]) map[email] = [];
+    map[email].push({ id: r.id as string, name: r.name as string, color: r.color as string });
+  }
+  return map;
+}
+
+export async function setUserLabels(email: string, labelIds: string[]) {
+  await sql()`DELETE FROM user_labels WHERE email = ${email}`;
+  for (const labelId of labelIds) {
+    await sql()`INSERT INTO user_labels (email, label_id) VALUES (${email}, ${labelId}) ON CONFLICT DO NOTHING`;
   }
 }
 

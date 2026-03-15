@@ -3,6 +3,7 @@ export interface AuthState {
   email: string;
   authenticatedAt: string;
   devMode?: boolean;
+  role?: string;
 }
 
 export interface UserProfile {

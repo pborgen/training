@@ -9,6 +9,8 @@ import { RoutineNewPage } from "./routes/_authenticated/routines.new";
 import { RoutineEditPage } from "./routes/_authenticated/routines.$id.edit";
 import { WorkoutPage } from "./routes/_authenticated/workout";
 import { ReadinessPage } from "./routes/_authenticated/readiness";
+import { UsersPage } from "./routes/_authenticated/users";
+import { LabelsPage } from "./routes/_authenticated/labels";
 
 const AUTH_KEY = "training_app_auth_v1";
 
@@ -45,6 +47,8 @@ const routineNewRoute = createRoute({ getParentRoute: () => authenticatedRoute, 
 const routineEditRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/routines/$id/edit", component: RoutineEditPage });
 const workoutRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/workout", component: WorkoutPage });
 const readinessRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/readiness", component: ReadinessPage });
+const usersRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/users", component: UsersPage });
+const labelsRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/labels", component: LabelsPage });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -57,6 +61,8 @@ const routeTree = rootRoute.addChildren([
     routineEditRoute,
     workoutRoute,
     readinessRoute,
+    usersRoute,
+    labelsRoute,
   ]),
 ]);
 

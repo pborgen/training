@@ -71,6 +71,27 @@ export const fetchReadiness = (limit = 0) => apiFetch<ReadinessCheckin[]>("GET",
 export const saveReadiness = (c: Omit<ReadinessCheckin, "id" | "createdAt">) => apiFetch<{ ok: boolean; checkin: ReadinessCheckin }>("POST", "/api/readiness", c);
 export const deleteReadiness = (id: string) => apiFetch<{ ok: boolean }>("DELETE", `/api/readiness/${id}`);
 
+// Admin
+export interface AdminUser { username: string; email: string; role: string; fullName: string; age: number; gender: string; createdAt: string; }
+export const fetchAllUsers = () => apiFetch<AdminUser[]>("GET", "/api/admin/users");
+
+// Labels
+export interface Label { id: string; name: string; color: string; }
+export const fetchLabels = () => apiFetch<Label[]>("GET", "/api/admin/labels");
+export const createLabelApi = (name: string, color: string) => apiFetch<{ ok: boolean; label: Label }>("POST", "/api/admin/labels", { name, color });
+export const updateLabelApi = (id: string, name: string, color: string) => apiFetch<{ ok: boolean; label: Label }>("PUT", `/api/admin/labels/${id}`, { name, color });
+export const deleteLabelApi = (id: string) => apiFetch<{ ok: boolean }>("DELETE", `/api/admin/labels/${id}`);
+export const fetchUserLabels = () => apiFetch<Record<string, Label[]>>("GET", "/api/admin/user-labels");
+export const setUserLabelsApi = (email: string, labelIds: string[]) => apiFetch<{ ok: boolean }>("PUT", `/api/admin/users/${encodeURIComponent(email)}/labels`, { labelIds });
+
+// Auth config
+export const fetchAuthConfig = () => fetch("/api/auth/config").then(r => r.json() as Promise<{ googleClientId: string | null }>);
+
+// Google auth
+export const loginWithGoogle = (credential: string) =>
+  fetch("/api/auth/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential }) })
+    .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error || "Google login failed"); return data as { ok: boolean; email: string; role: string }; });
+
 // Session
 export const checkSession = () => apiFetch<{ authenticated: boolean; email?: string }>("GET", "/api/session");
 

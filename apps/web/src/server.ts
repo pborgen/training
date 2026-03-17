@@ -5,7 +5,7 @@ import cors from "cors";
 import { OAuth2Client } from "google-auth-library";
 import {
   ensureTables, seedExercises, ensureProfile,
-  getProfile, upsertProfile,
+  getProfile, upsertProfile, updateProfilePhoto,
   getCatalogExercises,
   getUserExercises, createUserExercise, updateUserExercise, deleteUserExercise,
   getRoutines, getRoutine, createRoutine, updateRoutine, deleteRoutine,
@@ -13,7 +13,13 @@ import {
   getReadinessCheckins, createReadinessCheckin, deleteReadinessCheckin,
   getUserByUsername, seedDevUsers, getUserRole, getAllUsers, ensureGoogleUser,
   getAllLabels, createLabel, updateLabel, deleteLabel, getLabelsForAllUsers, setUserLabels,
+  getScheduledWorkouts, getScheduledWorkoutsForAll, createScheduledWorkout, deleteScheduledWorkout,
+  getAllRoutinesAdmin, seedDevRoutines, getSetting, setSetting,
+  ensureRagTables, getKnowledgeChunkCount, saveChatMessage, getChatHistory,
 } from "./db.js";
+import { seedKnowledgeBase } from "./rag/embeddings.js";
+import { retrieveRelevantChunks } from "./rag/retrieval.js";
+import { generateAnswer } from "./rag/generation.js";
 
 export const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -176,6 +182,132 @@ app.put("/api/admin/users/:email/labels", async (req, res) => {
   }
 });
 
+/* ── Scheduled Workouts (admin) ────────────── */
+
+app.get("/api/admin/scheduled-workouts", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const from = (req.query.from as string) || "2000-01-01";
+    const to = (req.query.to as string) || "2099-12-31";
+    res.json(await getScheduledWorkoutsForAll(from, to));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.post("/api/admin/scheduled-workouts", async (req, res) => {
+  try {
+    const adminEmail = await requireAdmin(req, res);
+    if (!adminEmail) return;
+    const { clientEmail, routineId, routineName, scheduledDate, notes } = req.body;
+    if (!clientEmail || !routineId || !routineName || !scheduledDate) {
+      return res.status(400).json({ error: "clientEmail, routineId, routineName, and scheduledDate are required" });
+    }
+    const id = crypto.randomUUID();
+    const entry = await createScheduledWorkout(id, { clientEmail, routineId, routineName, scheduledDate, notes, createdBy: adminEmail });
+    res.json({ ok: true, entry });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.delete("/api/admin/scheduled-workouts/:id", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    await deleteScheduledWorkout(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.get("/api/admin/routines", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    res.json(await getAllRoutinesAdmin());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/* ── App Settings (admin) ─────────────────── */
+
+app.get("/api/admin/settings/:key", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const value = await getSetting(req.params.key);
+    res.json({ key: req.params.key, value });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.put("/api/admin/settings/:key", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const { value } = req.body;
+    if (value == null) return res.status(400).json({ error: "value required" });
+    await setSetting(req.params.key, String(value));
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/* ── Scheduled Workouts (client) ──────────── */
+
+app.get("/api/settings/client-permissions", async (req, res) => {
+  try {
+    const selfSchedule = await getSetting("client_self_schedule");
+    res.json({ clientSelfSchedule: selfSchedule !== "false" });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.get("/api/my-schedule", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const from = (req.query.from as string) || "2000-01-01";
+    const to = (req.query.to as string) || "2099-12-31";
+    res.json(await getScheduledWorkouts(email, from, to));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.post("/api/my-schedule", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const selfSchedule = await getSetting("client_self_schedule");
+    if (selfSchedule === "false") return res.status(403).json({ error: "Self-scheduling is disabled by your admin" });
+    const { routineId, routineName, scheduledDate, notes } = req.body;
+    if (!routineId || !routineName || !scheduledDate) {
+      return res.status(400).json({ error: "routineId, routineName, and scheduledDate are required" });
+    }
+    const id = crypto.randomUUID();
+    const entry = await createScheduledWorkout(id, { clientEmail: email, routineId, routineName, scheduledDate, notes, createdBy: email });
+    res.json({ ok: true, entry });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.delete("/api/my-schedule/:id", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const selfSchedule = await getSetting("client_self_schedule");
+    if (selfSchedule === "false") return res.status(403).json({ error: "Self-scheduling is disabled by your admin" });
+    await deleteScheduledWorkout(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 /* ── Google auth ────────────────────────────── */
 
 app.post("/api/auth/google", async (req, res) => {
@@ -187,7 +319,7 @@ app.post("/api/auth/google", async (req, res) => {
     const payload = ticket.getPayload();
     const email = payload?.email;
     if (!email) return res.status(401).json({ error: "No email in token" });
-    await ensureProfile(email);
+    await ensureGoogleUser(email, payload?.name);
     const role = await getUserRole(email);
     res.json({ ok: true, email, role });
   } catch (e) {
@@ -243,6 +375,28 @@ app.put("/api/profile", async (req, res) => {
     if (!email) return;
     await upsertProfile(email, req.body);
     res.json({ ok: true, profile: await getProfile(email) });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.put("/api/profile/photo", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const { photoUrl } = req.body;
+    if (!photoUrl || typeof photoUrl !== "string") {
+      return res.status(400).json({ error: "photoUrl is required" });
+    }
+    if (!photoUrl.startsWith("data:image/")) {
+      return res.status(400).json({ error: "Only data URL images are accepted" });
+    }
+    // Limit to ~2MB base64
+    if (photoUrl.length > 2_800_000) {
+      return res.status(413).json({ error: "Image too large (max ~2MB)" });
+    }
+    await updateProfilePhoto(email, photoUrl);
+    res.json({ ok: true, photoUrl });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -427,6 +581,68 @@ app.delete("/api/readiness/:id", async (req, res) => {
   }
 });
 
+/* ── RAG Exercise Coach ────────────────────── */
+
+app.get("/api/rag/status", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const chunkCount = await getKnowledgeChunkCount();
+    res.json({ seeded: chunkCount > 0, chunkCount });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.post("/api/rag/seed", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    console.log("Seeding RAG knowledge base...");
+    const result = await seedKnowledgeBase();
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.post("/api/rag/chat", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const { message, sessionId: existingSessionId } = req.body;
+    if (!message?.trim()) return res.status(400).json({ error: "Message required" });
+
+    const sessionId = existingSessionId || uuid();
+
+    // Load chat history for multi-turn context
+    const history = existingSessionId
+      ? (await getChatHistory(email, sessionId)).map(m => ({ role: m.role as "user" | "assistant", content: m.content }))
+      : [];
+
+    // RAG pipeline: retrieve → generate
+    const chunks = await retrieveRelevantChunks(message, 5);
+    const { answer, sources } = await generateAnswer(message, chunks, history);
+
+    // Save both messages to history
+    await saveChatMessage(uuid(), email, sessionId, "user", message);
+    await saveChatMessage(uuid(), email, sessionId, "assistant", answer, sources);
+
+    res.json({ answer, sources, sessionId });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.get("/api/rag/chat/:sessionId", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    res.json(await getChatHistory(email, req.params.sessionId));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 /* ── SPA Fallback ──────────────────────────── */
 
 app.get("*", (_req, res) => {
@@ -438,8 +654,10 @@ app.get("*", (_req, res) => {
 if (!process.env.VERCEL) {
   (async () => {
     await ensureTables();
+    await ensureRagTables();
     await seedExercises();
     await seedDevUsers();
+    await seedDevRoutines();
     app.listen(port, () => {
       console.log(`Training app running on http://localhost:${port}`);
     });

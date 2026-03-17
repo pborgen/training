@@ -4,9 +4,12 @@ import { useAuth } from "../auth";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
+  { to: "/schedule", label: "Schedule", icon: "calendar", clientOnly: true },
   { to: "/workout", label: "Workout", icon: "workout" },
   { to: "/readiness", label: "Readiness", icon: "readiness" },
   { to: "/exercises", label: "Exercises", icon: "exercises" },
+  { to: "/coach", label: "Coach", icon: "coach" },
+  { to: "/calendar", label: "Calendar", icon: "calendar", adminOnly: true },
   { to: "/users", label: "Users", icon: "users", adminOnly: true },
   { to: "/labels", label: "Labels", icon: "label", adminOnly: true },
   { to: "/profile", label: "Profile", icon: "profile" },
@@ -29,6 +32,10 @@ function NavIcon({ name, size = 22 }: { name: string; size?: number }) {
       return <svg viewBox="0 0 24 24" {...s}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
     case "users":
       return <svg viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+    case "coach":
+      return <svg viewBox="0 0 24 24" {...s}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+    case "calendar":
+      return <svg viewBox="0 0 24 24" {...s}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
     case "menu":
       return <svg viewBox="0 0 24 24" {...s}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
     case "close":
@@ -56,7 +63,11 @@ export function RootLayout() {
 
   const isPublic = path === "/" || path === "/login";
   const isAdmin = user?.role === "admin";
-  const visibleNavItems = NAV_ITEMS.filter(item => !("adminOnly" in item && item.adminOnly) || isAdmin);
+  const visibleNavItems = NAV_ITEMS.filter(item => {
+    if ("adminOnly" in item && item.adminOnly) return isAdmin;
+    if ("clientOnly" in item && item.clientOnly) return !isAdmin;
+    return true;
+  });
 
   function navigate(to: string) {
     router.navigate({ to });

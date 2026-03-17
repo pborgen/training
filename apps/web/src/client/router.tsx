@@ -11,6 +11,9 @@ import { WorkoutPage } from "./routes/_authenticated/workout";
 import { ReadinessPage } from "./routes/_authenticated/readiness";
 import { UsersPage } from "./routes/_authenticated/users";
 import { LabelsPage } from "./routes/_authenticated/labels";
+import { CalendarPage } from "./routes/_authenticated/calendar";
+import { SchedulePage } from "./routes/_authenticated/schedule";
+import { CoachPage } from "./routes/_authenticated/coach";
 
 const AUTH_KEY = "training_app_auth_v1";
 
@@ -49,6 +52,9 @@ const workoutRoute = createRoute({ getParentRoute: () => authenticatedRoute, pat
 const readinessRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/readiness", component: ReadinessPage });
 const usersRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/users", component: UsersPage });
 const labelsRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/labels", component: LabelsPage });
+const calendarRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/calendar", component: CalendarPage });
+const scheduleRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/schedule", component: SchedulePage });
+const coachRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/coach", component: CoachPage });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -63,6 +69,9 @@ const routeTree = rootRoute.addChildren([
     readinessRoute,
     usersRoute,
     labelsRoute,
+    calendarRoute,
+    scheduleRoute,
+    coachRoute,
   ]),
 ]);
 

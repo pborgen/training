@@ -14,6 +14,7 @@ export interface UserProfile {
   weightKg: number;
   activityLevel: string;
   units: string;
+  photoUrl?: string;
 }
 
 export interface Exercise {
@@ -26,6 +27,13 @@ export interface Exercise {
   defaultReps: number;
 }
 
+export interface ExerciseMedia {
+  id: string;
+  type: "photo" | "video";
+  url: string;
+  caption?: string;
+}
+
 export interface UserExercise {
   id: string;
   name: string;
@@ -34,6 +42,7 @@ export interface UserExercise {
   defaultSets: number;
   defaultReps: number;
   defaultWeightKg: number;
+  media: ExerciseMedia[];
   createdAt: string;
 }
 
@@ -88,4 +97,21 @@ export interface ReadinessCheckin {
   motivation: number;
   notes: string;
   createdAt: string;
+}
+
+export interface ScheduledWorkout {
+  id: string;
+  clientEmail: string;
+  routineId: string;
+  routineName: string;
+  scheduledDate: string;
+  notes: string;
+  createdBy: string;
+  createdAt: string;
+  clientName?: string;
+}
+
+export interface AdminRoutine extends Routine {
+  email: string;
+  ownerName: string;
 }

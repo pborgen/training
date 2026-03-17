@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchProfile, saveProfile } from "../api";
+import { fetchProfile, saveProfile, uploadProfilePhoto } from "../api";
 import type { UserProfile } from "../types";
 
 export function useProfile() {
@@ -17,6 +17,18 @@ export function useSaveProfile() {
     mutationFn: (p: UserProfile) => saveProfile(p),
     onSuccess: (data) => {
       qc.setQueryData(["profile"], data.profile);
+    },
+  });
+}
+
+export function useUploadPhoto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (photoUrl: string) => uploadProfilePhoto(photoUrl),
+    onSuccess: (data) => {
+      qc.setQueryData(["profile"], (old: UserProfile | undefined) =>
+        old ? { ...old, photoUrl: data.photoUrl } : old
+      );
     },
   });
 }

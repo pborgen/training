@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useProfile, useSaveProfile } from "../../hooks/useProfile";
+import { useState, useEffect, useRef } from "react";
+import { useProfile, useSaveProfile, useUploadPhoto } from "../../hooks/useProfile";
 import type { UserProfile } from "../../types";
 
 const EMPTY: UserProfile = { fullName: "", age: 0, gender: "", heightCm: 0, weightKg: 0, activityLevel: "moderate", units: "lbs" };
@@ -7,6 +7,8 @@ const EMPTY: UserProfile = { fullName: "", age: 0, gender: "", heightCm: 0, weig
 export function ProfilePage() {
   const { data, isLoading } = useProfile();
   const save = useSaveProfile();
+  const uploadPhoto = useUploadPhoto();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<UserProfile>(EMPTY);
   const [saved, setSaved] = useState(false);
 
@@ -23,6 +25,20 @@ export function ProfilePage() {
     });
   }
 
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 2 * 1024 * 1024) { alert("Image must be under 2MB"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      uploadPhoto.mutate(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
   if (isLoading) return <div className="page"><p className="hint">Loading...</p></div>;
 
   return (
@@ -30,6 +46,29 @@ export function ProfilePage() {
       <h1>Profile</h1>
       <div className="card">
         <div className="form-stack">
+          <div className="photo-upload" onClick={() => fileRef.current?.click()}>
+            {form.photoUrl ? (
+              <img src={form.photoUrl} alt="Profile" className="photo-preview" />
+            ) : (
+              <div className="photo-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+            )}
+            <span className="photo-label">
+              {uploadPhoto.isPending ? "Uploading..." : "Tap to upload photo"}
+            </span>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoSelect}
+              style={{ display: "none" }}
+            />
+          </div>
+
           <label className="form-label">
             Full Name
             <input value={form.fullName} onChange={(e) => set("fullName", e.target.value)} />

@@ -5,6 +5,8 @@ import type {
   Routine,
   WorkoutLogEntry,
   ReadinessCheckin,
+  ScheduledWorkout,
+  AdminRoutine,
 } from "./types";
 
 const AUTH_KEY = "training_app_auth_v1";
@@ -47,6 +49,7 @@ async function apiFetch<T>(method: string, path: string, body?: unknown): Promis
 // Profile
 export const fetchProfile = () => apiFetch<UserProfile>("GET", "/api/profile");
 export const saveProfile = (p: UserProfile) => apiFetch<{ ok: boolean; profile: UserProfile }>("PUT", "/api/profile", p);
+export const uploadProfilePhoto = (photoUrl: string) => apiFetch<{ ok: boolean; photoUrl: string }>("PUT", "/api/profile/photo", { photoUrl });
 
 // Exercises
 export const fetchExercises = () => apiFetch<Exercise[]>("GET", "/api/exercises");
@@ -84,6 +87,33 @@ export const deleteLabelApi = (id: string) => apiFetch<{ ok: boolean }>("DELETE"
 export const fetchUserLabels = () => apiFetch<Record<string, Label[]>>("GET", "/api/admin/user-labels");
 export const setUserLabelsApi = (email: string, labelIds: string[]) => apiFetch<{ ok: boolean }>("PUT", `/api/admin/users/${encodeURIComponent(email)}/labels`, { labelIds });
 
+// Scheduled Workouts (admin)
+export const fetchScheduledWorkoutsAdmin = (from: string, to: string) =>
+  apiFetch<ScheduledWorkout[]>("GET", `/api/admin/scheduled-workouts?from=${from}&to=${to}`);
+export const createScheduledWorkoutApi = (sw: { clientEmail: string; routineId: string; routineName: string; scheduledDate: string; notes?: string }) =>
+  apiFetch<{ ok: boolean; entry: ScheduledWorkout }>("POST", "/api/admin/scheduled-workouts", sw);
+export const deleteScheduledWorkoutApi = (id: string) =>
+  apiFetch<{ ok: boolean }>("DELETE", `/api/admin/scheduled-workouts/${id}`);
+export const fetchAllRoutinesAdmin = () => apiFetch<AdminRoutine[]>("GET", "/api/admin/routines");
+
+// Scheduled Workouts (client)
+export const fetchMySchedule = (from: string, to: string) =>
+  apiFetch<ScheduledWorkout[]>("GET", `/api/my-schedule?from=${from}&to=${to}`);
+export const createMySchedule = (sw: { routineId: string; routineName: string; scheduledDate: string; notes?: string }) =>
+  apiFetch<{ ok: boolean; entry: ScheduledWorkout }>("POST", "/api/my-schedule", sw);
+export const deleteMySchedule = (id: string) =>
+  apiFetch<{ ok: boolean }>("DELETE", `/api/my-schedule/${id}`);
+
+// Client permissions
+export const fetchClientPermissions = () =>
+  apiFetch<{ clientSelfSchedule: boolean }>("GET", "/api/settings/client-permissions");
+
+// Admin settings
+export const fetchAdminSetting = (key: string) =>
+  apiFetch<{ key: string; value: string | null }>("GET", `/api/admin/settings/${key}`);
+export const updateAdminSetting = (key: string, value: string) =>
+  apiFetch<{ ok: boolean }>("PUT", `/api/admin/settings/${key}`, { value });
+
 // Auth config
 export const fetchAuthConfig = () => fetch("/api/auth/config").then(r => r.json() as Promise<{ googleClientId: string | null }>);
 
@@ -91,6 +121,15 @@ export const fetchAuthConfig = () => fetch("/api/auth/config").then(r => r.json(
 export const loginWithGoogle = (credential: string) =>
   fetch("/api/auth/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential }) })
     .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error || "Google login failed"); return data as { ok: boolean; email: string; role: string }; });
+
+// RAG Coach
+export interface RagChatResponse { answer: string; sources: { chunkId: string; exerciseId: string; chunkType: string; title: string; similarity: number }[]; sessionId: string; }
+export interface RagMessage { id: string; role: string; content: string; sources: unknown[]; createdAt: string; }
+export interface RagStatus { seeded: boolean; chunkCount: number; }
+export const fetchRagStatus = () => apiFetch<RagStatus>("GET", "/api/rag/status");
+export const sendRagMessage = (message: string, sessionId?: string) => apiFetch<RagChatResponse>("POST", "/api/rag/chat", { message, sessionId });
+export const fetchRagChatHistory = (sessionId: string) => apiFetch<RagMessage[]>("GET", `/api/rag/chat/${sessionId}`);
+export const triggerRagSeed = () => apiFetch<{ ok: boolean; chunksProcessed: number }>("POST", "/api/rag/seed");
 
 // Session
 export const checkSession = () => apiFetch<{ authenticated: boolean; email?: string }>("GET", "/api/session");

@@ -10,6 +10,8 @@ export function UsersPage() {
   const [editingEmail, setEditingEmail] = useState<string | null>(null);
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [filterLabel, setFilterLabel] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [filterGender, setFilterGender] = useState<string>("");
 
   const saveLabels = useMutation({
     mutationFn: ({ email, labelIds }: { email: string; labelIds: string[] }) => setUserLabelsApi(email, labelIds),
@@ -30,37 +32,83 @@ export function UsersPage() {
   const admins = users.filter(u => u.role === "admin");
   let clients = users.filter(u => u.role !== "admin");
 
-  // Filter by label
+  // Filters
+  if (search) {
+    const q = search.toLowerCase();
+    clients = clients.filter(u =>
+      (u.fullName || "").toLowerCase().includes(q) ||
+      u.username.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q)
+    );
+  }
   if (filterLabel) {
     clients = clients.filter(u => (userLabelsMap[u.email] || []).some(l => l.id === filterLabel));
   }
+  if (filterGender) {
+    clients = clients.filter(u => u.gender === filterGender);
+  }
+
+  const genders = [...new Set(users.filter(u => u.role !== "admin" && u.gender).map(u => u.gender))];
+  const hasActiveFilters = !!search || !!filterLabel || !!filterGender;
 
   return (
     <div className="page">
       <h1>Users</h1>
 
-      {/* Label filter */}
-      {labels.length > 0 && (
-        <div className="label-filter">
-          <button
-            className={`label-filter-btn ${!filterLabel ? "active" : ""}`}
-            onClick={() => setFilterLabel("")}
-          >All</button>
-          {labels.map(l => (
+      {/* Filters */}
+      <div className="users-filters">
+        <input
+          className="filter-search"
+          type="text"
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <div className="filter-row">
+          {labels.length > 0 && (
+            <div className="label-filter">
+              <button
+                className={`label-filter-btn ${!filterLabel ? "active" : ""}`}
+                onClick={() => setFilterLabel("")}
+              >All</button>
+              {labels.map(l => (
+                <button
+                  key={l.id}
+                  className={`label-filter-btn ${filterLabel === l.id ? "active" : ""}`}
+                  style={filterLabel === l.id ? { background: l.color + "22", color: l.color, borderColor: l.color } : {}}
+                  onClick={() => setFilterLabel(filterLabel === l.id ? "" : l.id)}
+                >
+                  <span className="label-dot" style={{ background: l.color }} />
+                  {l.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {genders.length > 0 && (
+            <div className="label-filter">
+              <button
+                className={`label-filter-btn ${!filterGender ? "active" : ""}`}
+                onClick={() => setFilterGender("")}
+              >All Genders</button>
+              {genders.map(g => (
+                <button
+                  key={g}
+                  className={`label-filter-btn ${filterGender === g ? "active" : ""}`}
+                  onClick={() => setFilterGender(filterGender === g ? "" : g)}
+                >{g}</button>
+              ))}
+            </div>
+          )}
+          {hasActiveFilters && (
             <button
-              key={l.id}
-              className={`label-filter-btn ${filterLabel === l.id ? "active" : ""}`}
-              style={filterLabel === l.id ? { background: l.color + "22", color: l.color, borderColor: l.color } : {}}
-              onClick={() => setFilterLabel(filterLabel === l.id ? "" : l.id)}
-            >
-              <span className="label-dot" style={{ background: l.color }} />
-              {l.name}
-            </button>
-          ))}
+              className="btn-link-sm"
+              onClick={() => { setSearch(""); setFilterLabel(""); setFilterGender(""); }}
+            >Clear filters</button>
+          )}
         </div>
-      )}
+      </div>
 
-      {admins.length > 0 && !filterLabel && (
+      {admins.length > 0 && !hasActiveFilters && (
         <section className="users-section">
           <h2>Admins</h2>
           <div className="users-grid">

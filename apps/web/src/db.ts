@@ -24,9 +24,13 @@ export async function ensureTables() {
       weight_kg REAL DEFAULT 0,
       activity_level TEXT DEFAULT 'moderate',
       units TEXT DEFAULT 'lbs',
+      photo_url TEXT DEFAULT '',
       synced_at TIMESTAMPTZ DEFAULT now()
     )
   `;
+  // Migration: add photo_url column if missing
+  try { await sql()`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT ''`; } catch {};
+
   await sql()`
     CREATE TABLE IF NOT EXISTS exercises (
       id TEXT PRIMARY KEY,
@@ -48,10 +52,13 @@ export async function ensureTables() {
       default_sets INT DEFAULT 3,
       default_reps INT DEFAULT 10,
       default_weight_kg REAL DEFAULT 0,
+      media JSONB DEFAULT '[]',
       created_at TIMESTAMPTZ DEFAULT now(),
       PRIMARY KEY (email, id)
     )
   `;
+  // Migration: add media column if missing
+  try { await sql()`ALTER TABLE user_exercises ADD COLUMN IF NOT EXISTS media JSONB DEFAULT '[]'`; } catch {};
   await sql()`
     CREATE TABLE IF NOT EXISTS routines (
       id TEXT NOT NULL,
@@ -116,6 +123,40 @@ export async function ensureTables() {
       assigned_at TIMESTAMPTZ DEFAULT now(),
       PRIMARY KEY (email, label_id)
     )
+  `;
+  await sql()`
+    CREATE TABLE IF NOT EXISTS scheduled_workouts (
+      id TEXT PRIMARY KEY,
+      client_email TEXT NOT NULL REFERENCES profiles(email),
+      routine_id TEXT NOT NULL,
+      routine_name TEXT NOT NULL,
+      scheduled_date DATE NOT NULL,
+      notes TEXT DEFAULT '',
+      created_by TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql()`
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `;
+  // Default: clients can self-schedule
+  await sql()`INSERT INTO app_settings (key, value) VALUES ('client_self_schedule', 'true') ON CONFLICT DO NOTHING`;
+}
+
+/* ── App settings ──────────────────────────── */
+
+export async function getSetting(key: string): Promise<string | null> {
+  const rows = await sql()`SELECT value FROM app_settings WHERE key = ${key}`;
+  return rows[0] ? (rows[0].value as string) : null;
+}
+
+export async function setSetting(key: string, value: string) {
+  await sql()`
+    INSERT INTO app_settings (key, value) VALUES (${key}, ${value})
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
   `;
 }
 
@@ -190,6 +231,66 @@ export async function seedDevUsers() {
   for (const u of devUsers) {
     const hash = (await import("node:crypto")).createHash("sha256").update(u.password).digest("hex");
     await createUser(u.username, hash, u.email, u.role);
+  }
+}
+
+export async function seedDevRoutines() {
+  const rows = await sql()`SELECT count(*)::int AS n FROM routines`;
+  if (rows[0].n > 0) return;
+
+  const routines = [
+    {
+      id: "lower-strength", email: "paul@dev.local", name: "Lower Body Strength", goal: "strength", daysPerWeek: 3,
+      exercises: [
+        { exerciseId: "barbell-back-squat", exerciseName: "Barbell Back Squat", sets: 5, reps: 5, weightKg: 84 },
+        { exerciseId: "deadlift", exerciseName: "Deadlift", sets: 3, reps: 5, weightKg: 102 },
+        { exerciseId: "leg-press", exerciseName: "Leg Press", sets: 3, reps: 8, weightKg: 57 },
+        { exerciseId: "lunges", exerciseName: "Lunges", sets: 3, reps: 10, weightKg: 18 },
+      ],
+    },
+    {
+      id: "upper-push", email: "paul@dev.local", name: "Upper Body Push", goal: "muscle_building", daysPerWeek: 2,
+      exercises: [
+        { exerciseId: "overhead-press", exerciseName: "Overhead Press", sets: 4, reps: 8, weightKg: 5 },
+        { exerciseId: "upright-cable-rows", exerciseName: "Upright Cable Rows", sets: 4, reps: 10, weightKg: 27 },
+      ],
+    },
+    {
+      id: "glute-focus", email: "paul@dev.local", name: "Glute Focus", goal: "muscle_building", daysPerWeek: 2,
+      exercises: [
+        { exerciseId: "hip-thrust", exerciseName: "Hip Thrust", sets: 4, reps: 10, weightKg: 61 },
+        { exerciseId: "back-extension", exerciseName: "Back Extension", sets: 3, reps: 12, weightKg: 64 },
+        { exerciseId: "adduction", exerciseName: "Adduction", sets: 2, reps: 12, weightKg: 68 },
+        { exerciseId: "abduction", exerciseName: "Abduction", sets: 2, reps: 12, weightKg: 68 },
+      ],
+    },
+    {
+      id: "full-body", email: "diego@dev.local", name: "Full Body", goal: "general", daysPerWeek: 3,
+      exercises: [
+        { exerciseId: "barbell-back-squat", exerciseName: "Barbell Back Squat", sets: 3, reps: 8, weightKg: 61 },
+        { exerciseId: "overhead-press", exerciseName: "Overhead Press", sets: 3, reps: 8, weightKg: 5 },
+        { exerciseId: "deadlift", exerciseName: "Deadlift", sets: 3, reps: 5, weightKg: 80 },
+        { exerciseId: "hip-thrust", exerciseName: "Hip Thrust", sets: 3, reps: 10, weightKg: 45 },
+      ],
+    },
+    {
+      id: "leg-endurance", email: "diego@dev.local", name: "Leg Endurance", goal: "endurance", daysPerWeek: 2,
+      exercises: [
+        { exerciseId: "hack-squat", exerciseName: "Hack Squat", sets: 4, reps: 15, weightKg: 40 },
+        { exerciseId: "leg-press", exerciseName: "Leg Press", sets: 4, reps: 15, weightKg: 45 },
+        { exerciseId: "lunges", exerciseName: "Lunges", sets: 3, reps: 15, weightKg: 9 },
+      ],
+    },
+  ];
+
+  const now = new Date().toISOString();
+  for (const r of routines) {
+    const exercises = JSON.stringify(r.exercises);
+    await sql()`
+      INSERT INTO routines (id, email, name, goal, days_per_week, exercises, created_at, updated_at)
+      VALUES (${r.id}, ${r.email}, ${r.name}, ${r.goal}, ${r.daysPerWeek}, ${exercises}::jsonb, ${now}, ${now})
+      ON CONFLICT DO NOTHING
+    `;
   }
 }
 
@@ -294,11 +395,16 @@ export async function upsertProfile(email: string, p: Record<string, unknown>) {
   `;
 }
 
+export async function updateProfilePhoto(email: string, photoUrl: string) {
+  await sql()`UPDATE profiles SET photo_url = ${photoUrl}, synced_at = now() WHERE email = ${email}`;
+}
+
 function toProfileObj(r: Record<string, unknown>) {
   return {
     fullName: r.full_name, age: r.age, gender: r.gender,
     heightCm: r.height_cm, weightKg: r.weight_kg,
     activityLevel: r.activity_level, units: r.units,
+    photoUrl: r.photo_url || "",
   };
 }
 
@@ -321,16 +427,18 @@ export async function getUserExercises(email: string) {
 
 export async function createUserExercise(email: string, e: Record<string, unknown>, id: string) {
   await ensureProfile(email);
+  const media = JSON.stringify(e.media || []);
   await sql()`
-    INSERT INTO user_exercises (id, email, name, type, muscle_group, default_sets, default_reps, default_weight_kg)
+    INSERT INTO user_exercises (id, email, name, type, muscle_group, default_sets, default_reps, default_weight_kg, media)
     VALUES (${id}, ${email}, ${(e.name as string) || ""}, ${(e.type as string) || "strength"},
             ${(e.muscleGroup as string) || ""}, ${(e.defaultSets as number) || 3},
-            ${(e.defaultReps as number) || 10}, ${(e.defaultWeightKg as number) || 0})
+            ${(e.defaultReps as number) || 10}, ${(e.defaultWeightKg as number) || 0}, ${media}::jsonb)
   `;
   return { ...e, id, createdAt: new Date().toISOString() };
 }
 
 export async function updateUserExercise(email: string, id: string, e: Record<string, unknown>) {
+  const media = e.media != null ? JSON.stringify(e.media) : null;
   const rows = await sql()`
     UPDATE user_exercises SET
       name = COALESCE(${(e.name as string) ?? null}, name),
@@ -338,7 +446,8 @@ export async function updateUserExercise(email: string, id: string, e: Record<st
       muscle_group = COALESCE(${(e.muscleGroup as string) ?? null}, muscle_group),
       default_sets = COALESCE(${(e.defaultSets as number) ?? null}, default_sets),
       default_reps = COALESCE(${(e.defaultReps as number) ?? null}, default_reps),
-      default_weight_kg = COALESCE(${(e.defaultWeightKg as number) ?? null}, default_weight_kg)
+      default_weight_kg = COALESCE(${(e.defaultWeightKg as number) ?? null}, default_weight_kg),
+      media = COALESCE(${media}::jsonb, media)
     WHERE email = ${email} AND id = ${id}
     RETURNING *
   `;
@@ -353,7 +462,7 @@ function toUserExObj(r: Record<string, unknown>) {
   return {
     id: r.id, name: r.name, type: r.type, muscleGroup: r.muscle_group,
     defaultSets: r.default_sets, defaultReps: r.default_reps,
-    defaultWeightKg: r.default_weight_kg, createdAt: r.created_at,
+    defaultWeightKg: r.default_weight_kg, media: r.media || [], createdAt: r.created_at,
   };
 }
 
@@ -470,4 +579,158 @@ function toReadinessObj(r: Record<string, unknown>) {
     mood: r.mood, soreness: r.soreness, motivation: r.motivation,
     notes: r.notes, createdAt: r.created_at,
   };
+}
+
+/* ── Scheduled workouts ────────────────── */
+
+export async function getScheduledWorkouts(clientEmail: string, from: string, to: string) {
+  const rows = await sql()`
+    SELECT * FROM scheduled_workouts
+    WHERE client_email = ${clientEmail} AND scheduled_date >= ${from}::date AND scheduled_date <= ${to}::date
+    ORDER BY scheduled_date
+  `;
+  return rows.map(toScheduledObj);
+}
+
+export async function getScheduledWorkoutsForAll(from: string, to: string) {
+  const rows = await sql()`
+    SELECT sw.*, p.full_name FROM scheduled_workouts sw
+    LEFT JOIN profiles p ON sw.client_email = p.email
+    WHERE sw.scheduled_date >= ${from}::date AND sw.scheduled_date <= ${to}::date
+    ORDER BY sw.scheduled_date, sw.client_email
+  `;
+  return rows.map(r => ({ ...toScheduledObj(r), clientName: (r.full_name as string) || "" }));
+}
+
+export async function createScheduledWorkout(id: string, sw: Record<string, unknown>) {
+  await ensureProfile(sw.clientEmail as string);
+  await sql()`
+    INSERT INTO scheduled_workouts (id, client_email, routine_id, routine_name, scheduled_date, notes, created_by)
+    VALUES (${id}, ${sw.clientEmail as string}, ${sw.routineId as string}, ${sw.routineName as string},
+            ${sw.scheduledDate as string}::date, ${(sw.notes as string) || ""}, ${sw.createdBy as string})
+  `;
+  return { id, ...sw, createdAt: new Date().toISOString() };
+}
+
+export async function deleteScheduledWorkout(id: string) {
+  await sql()`DELETE FROM scheduled_workouts WHERE id = ${id}`;
+}
+
+export async function getAllRoutinesAdmin() {
+  const rows = await sql()`
+    SELECT r.*, p.full_name FROM routines r
+    LEFT JOIN profiles p ON r.email = p.email
+    ORDER BY r.email, r.name
+  `;
+  return rows.map(r => ({
+    ...toRoutineObj(r),
+    email: r.email as string,
+    ownerName: (r.full_name as string) || "",
+  }));
+}
+
+function toScheduledObj(r: Record<string, unknown>) {
+  return {
+    id: r.id as string,
+    clientEmail: r.client_email as string,
+    routineId: r.routine_id as string,
+    routineName: r.routine_name as string,
+    scheduledDate: r.scheduled_date as string,
+    notes: (r.notes as string) || "",
+    createdBy: r.created_by as string,
+    createdAt: r.created_at as string,
+  };
+}
+
+/* ── RAG (Retrieval-Augmented Generation) ──── */
+
+export async function ensureRagTables() {
+  await sql()`
+    CREATE TABLE IF NOT EXISTS exercise_knowledge (
+      id TEXT PRIMARY KEY,
+      exercise_id TEXT NOT NULL,
+      chunk_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      content_tsv TSVECTOR,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql()`CREATE INDEX IF NOT EXISTS idx_knowledge_tsv ON exercise_knowledge USING GIN (content_tsv)`;
+  await sql()`
+    CREATE TABLE IF NOT EXISTS rag_chat_history (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL REFERENCES profiles(email),
+      session_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      sources JSONB DEFAULT '[]',
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  // Migration: drop old vector column if it exists
+  try { await sql()`ALTER TABLE exercise_knowledge DROP COLUMN IF EXISTS embedding`; } catch {};
+}
+
+export async function getKnowledgeChunkCount(): Promise<number> {
+  const rows = await sql()`SELECT count(*)::int AS n FROM exercise_knowledge`;
+  return rows[0].n as number;
+}
+
+export async function insertKnowledgeChunk(
+  id: string, exerciseId: string, chunkType: string, title: string, content: string
+) {
+  await sql()`
+    INSERT INTO exercise_knowledge (id, exercise_id, chunk_type, title, content, content_tsv)
+    VALUES (${id}, ${exerciseId}, ${chunkType}, ${title}, ${content},
+            to_tsvector('english', ${title} || ' ' || ${content}))
+    ON CONFLICT (id) DO UPDATE SET
+      content = EXCLUDED.content,
+      content_tsv = to_tsvector('english', EXCLUDED.title || ' ' || EXCLUDED.content)
+  `;
+}
+
+export async function searchSimilarChunks(query: string, topK: number) {
+  const rows = await sql()`
+    SELECT id, exercise_id, chunk_type, title, content,
+           ts_rank(content_tsv, websearch_to_tsquery('english', ${query})) AS similarity
+    FROM exercise_knowledge
+    WHERE content_tsv @@ websearch_to_tsquery('english', ${query})
+    ORDER BY similarity DESC
+    LIMIT ${topK}
+  `;
+  return rows.map(r => ({
+    id: r.id as string,
+    exerciseId: r.exercise_id as string,
+    chunkType: r.chunk_type as string,
+    title: r.title as string,
+    content: r.content as string,
+    similarity: r.similarity as number,
+    createdAt: r.created_at as string,
+  }));
+}
+
+export async function saveChatMessage(
+  id: string, email: string, sessionId: string, role: string, content: string, sources: unknown[] = []
+) {
+  const sourcesJson = JSON.stringify(sources);
+  await sql()`
+    INSERT INTO rag_chat_history (id, email, session_id, role, content, sources)
+    VALUES (${id}, ${email}, ${sessionId}, ${role}, ${content}, ${sourcesJson}::jsonb)
+  `;
+}
+
+export async function getChatHistory(email: string, sessionId: string) {
+  const rows = await sql()`
+    SELECT * FROM rag_chat_history
+    WHERE email = ${email} AND session_id = ${sessionId}
+    ORDER BY created_at ASC
+  `;
+  return rows.map(r => ({
+    id: r.id as string,
+    role: r.role as string,
+    content: r.content as string,
+    sources: r.sources as unknown[],
+    createdAt: r.created_at as string,
+  }));
 }

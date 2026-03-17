@@ -219,13 +219,19 @@ export function WorkoutPage() {
       <h1>Start Workout</h1>
       <div className="card">
         <div className="form-stack">
-          <select value={selectedRoutine} onChange={(e) => setSelectedRoutine(e.target.value)}>
-            <option value="">Select a routine...</option>
-            {routines.map((r) => (
-              <option key={r.id} value={r.id}>{r.name} ({r.exercises.length} exercises)</option>
-            ))}
-          </select>
-          <button className="btn-success" onClick={startWorkout}>Start Workout</button>
+          {routines.length === 0 ? (
+            <p className="hint">No routines yet. Create one from the Dashboard first.</p>
+          ) : (
+            <>
+              <select value={selectedRoutine} onChange={(e) => setSelectedRoutine(e.target.value)}>
+                <option value="">Select a routine...</option>
+                {routines.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name} ({r.exercises.length} exercises)</option>
+                ))}
+              </select>
+              <button className="btn-success" onClick={startWorkout} disabled={!selectedRoutine}>Start Workout</button>
+            </>
+          )}
           {status && <p className="hint">{status}</p>}
         </div>
       </div>

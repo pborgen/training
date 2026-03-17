@@ -3,11 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "apps/web"
+    "apps/web",
+    "apps/agent"
   ],
   "scripts": {
     "web:dev": "npm --workspace apps/web run dev",
     "web:build": "npm --workspace apps/web run build",
-    "web:start": "npm --workspace apps/web run start"
+    "web:start": "npm --workspace apps/web run start",
+    "agent:dev": "npm --workspace apps/agent run dev",
+    "agent:build": "npm --workspace apps/agent run build",
+    "agent:start": "npm --workspace apps/agent run start"
   }
 }

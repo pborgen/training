@@ -14,6 +14,7 @@ import { LabelsPage } from "./routes/_authenticated/labels";
 import { CalendarPage } from "./routes/_authenticated/calendar";
 import { SchedulePage } from "./routes/_authenticated/schedule";
 import { CoachPage } from "./routes/_authenticated/coach";
+import { KnowledgePage } from "./routes/_authenticated/knowledge";
 
 const AUTH_KEY = "training_app_auth_v1";
 
@@ -55,6 +56,7 @@ const labelsRoute = createRoute({ getParentRoute: () => authenticatedRoute, path
 const calendarRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/calendar", component: CalendarPage });
 const scheduleRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/schedule", component: SchedulePage });
 const coachRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/coach", component: CoachPage });
+const knowledgeRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/knowledge", component: KnowledgePage });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -72,6 +74,7 @@ const routeTree = rootRoute.addChildren([
     calendarRoute,
     scheduleRoute,
     coachRoute,
+    knowledgeRoute,
   ]),
 ]);
 

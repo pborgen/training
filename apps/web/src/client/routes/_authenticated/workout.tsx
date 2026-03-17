@@ -165,6 +165,11 @@ export function WorkoutPage() {
           <span className="hint">{allDone ? "All done!" : `${currentIndex + 1} of ${exerciseLogs.length}`}</span>
         </div>
 
+        {/* Progress bar */}
+        <div className="workout-progress">
+          <div className="workout-progress-fill" style={{ width: `${(currentIndex / exerciseLogs.length) * 100}%` }} />
+        </div>
+
         {!allDone && (
           <>
             <div className="card workout-exercise-card">
@@ -172,10 +177,24 @@ export function WorkoutPage() {
               <p className="hint">Target: {exerciseLogs[currentIndex].targetSets} sets &times; {exerciseLogs[currentIndex].targetReps} reps</p>
               <div className="sets-container">
                 {currentSets.map((s, idx) => (
-                  <div key={idx} className="set-row">
-                    <span className="hint">Set {idx + 1}</span>
-                    <input type="number" placeholder="Reps" value={s.repsCompleted || ""} onChange={(e) => updateSet(idx, "repsCompleted", Number(e.target.value))} />
-                    <input type="number" placeholder={units} value={s.weightUsedKg || ""} onChange={(e) => updateSet(idx, "weightUsedKg", Number(e.target.value))} />
+                  <div key={idx} className="set-row-enhanced">
+                    <span className="set-number">{idx + 1}</span>
+                    <div>
+                      <div className="stepper">
+                        <button type="button" className="stepper-btn" onClick={() => updateSet(idx, "repsCompleted", Math.max(0, s.repsCompleted - 1))}>-</button>
+                        <input type="number" value={s.repsCompleted || ""} onChange={(e) => updateSet(idx, "repsCompleted", Number(e.target.value))} placeholder="0" />
+                        <button type="button" className="stepper-btn" onClick={() => updateSet(idx, "repsCompleted", s.repsCompleted + 1)}>+</button>
+                      </div>
+                      <div className="stepper-label">Reps</div>
+                    </div>
+                    <div>
+                      <div className="stepper">
+                        <button type="button" className="stepper-btn" onClick={() => updateSet(idx, "weightUsedKg", Math.max(0, s.weightUsedKg - 5))}>-</button>
+                        <input type="number" value={s.weightUsedKg || ""} onChange={(e) => updateSet(idx, "weightUsedKg", Number(e.target.value))} placeholder="0" />
+                        <button type="button" className="stepper-btn" onClick={() => updateSet(idx, "weightUsedKg", s.weightUsedKg + 5)}>+</button>
+                      </div>
+                      <div className="stepper-label">{units}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -200,9 +219,17 @@ export function WorkoutPage() {
         )}
 
         {allDone && (
-          <div className="card" style={{ textAlign: "center" }}>
-            <p style={{ fontSize: 48 }}>&#10003;</p>
-            <p>All exercises logged!</p>
+          <div className="card">
+            <div className="workout-complete-anim">
+              <div className="workout-complete-ring">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <circle cx="40" cy="40" r="36" stroke="var(--accent)" strokeWidth="3" opacity="0.2" />
+                  <circle cx="40" cy="40" r="36" stroke="var(--accent)" strokeWidth="3" strokeDasharray="226" strokeDashoffset="0" strokeLinecap="round" />
+                  <polyline className="check-path" points="26,42 36,52 56,30" stroke="var(--accent)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              </div>
+              <span className="workout-complete-text">All exercises logged!</span>
+            </div>
             <button className="btn-primary btn-full" onClick={finishWorkout} disabled={saveWorkout.isPending}>
               {saveWorkout.isPending ? "Saving..." : "Finish Workout"}
             </button>
@@ -220,7 +247,12 @@ export function WorkoutPage() {
       <div className="card">
         <div className="form-stack">
           {routines.length === 0 ? (
-            <p className="hint">No routines yet. Create one from the Dashboard first.</p>
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="4" rx="1.5"/><rect x="14" y="11" width="7" height="10" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              </div>
+              <p>No routines yet. Create one from the Dashboard first.</p>
+            </div>
           ) : (
             <>
               <select value={selectedRoutine} onChange={(e) => setSelectedRoutine(e.target.value)}>

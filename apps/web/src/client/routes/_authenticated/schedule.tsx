@@ -1,9 +1,22 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchMySchedule, createMySchedule, deleteMySchedule, fetchClientPermissions } from "../../api";
 import { useRoutines } from "../../hooks/useRoutines";
-import type { ScheduledWorkout } from "../../types";
+import { useReadiness } from "../../hooks/useReadiness";
+import type { ScheduledWorkout, ReadinessCheckin } from "../../types";
 
 type View = "week" | "month";
+
+const INVERTED_KEYS = new Set(["stress", "soreness"]);
+function readinessScore(c: ReadinessCheckin): number {
+  const keys = ["sleepQuality", "energy", "stress", "mood", "soreness", "motivation"] as const;
+  const vals = keys.map(k => INVERTED_KEYS.has(k) ? 11 - c[k] : c[k]);
+  return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+}
+function scoreColor(score: number): string {
+  if (score >= 7) return "var(--success)";
+  if (score >= 4) return "var(--accent)";
+  return "var(--danger)";
+}
 
 function weekStart(d: Date) {
   const s = new Date(d);
@@ -55,6 +68,14 @@ export function SchedulePage() {
   const [workouts, setWorkouts] = useState<ScheduledWorkout[]>([]);
   const [canSelfSchedule, setCanSelfSchedule] = useState(true);
   const { data: routines = [] } = useRoutines();
+  const { data: checkins = [] } = useReadiness();
+
+  // Index check-ins by date (YYYY-MM-DD)
+  const checkinByDate: Record<string, ReadinessCheckin> = {};
+  for (const c of checkins) {
+    const d = c.createdAt.slice(0, 10);
+    if (!checkinByDate[d]) checkinByDate[d] = c; // keep most recent (first from API)
+  }
 
   // Assign form
   const [showForm, setShowForm] = useState(false);
@@ -139,8 +160,21 @@ export function SchedulePage() {
   // Helper to render a workout card for a day with optional remove button
   function renderDayWorkouts(dayWorkouts: ScheduledWorkout[], dateKey: string) {
     const isSelf = canSelfSchedule;
+    const checkin = checkinByDate[dateKey];
     return (
       <>
+        {checkin && (() => {
+          const score = readinessScore(checkin);
+          return (
+            <div className="readiness-badge" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 8, background: "var(--surface2, rgba(255,255,255,0.04))" }}>
+              <span style={{ fontWeight: 700, fontSize: 18, color: scoreColor(score), lineHeight: 1 }}>{score}</span>
+              <span className="hint" style={{ fontSize: 12 }}>Readiness</span>
+              <span className="hint" style={{ fontSize: 11, marginLeft: "auto", opacity: 0.6 }}>
+                S{checkin.sleepQuality} E{checkin.energy} St{checkin.stress} M{checkin.mood} So{checkin.soreness} Mo{checkin.motivation}
+              </span>
+            </div>
+          );
+        })()}
         {dayWorkouts.length === 0 ? (
           <p className="hint" style={{ marginTop: 6 }}>Rest day</p>
         ) : (
@@ -222,6 +256,15 @@ export function SchedulePage() {
                         </span>
                       </div>
                     )}
+                    {checkinByDate[key] && (() => {
+                      const s = readinessScore(checkinByDate[key]);
+                      return (
+                        <div className="calendar-event">
+                          <span className="calendar-event-dot" style={{ background: scoreColor(s) }} />
+                          <span className="calendar-event-text" style={{ color: scoreColor(s) }}>{s}</span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}

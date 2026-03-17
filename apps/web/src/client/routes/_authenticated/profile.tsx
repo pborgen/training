@@ -39,7 +39,12 @@ export function ProfilePage() {
     e.target.value = "";
   }
 
-  if (isLoading) return <div className="page"><p className="hint">Loading...</p></div>;
+  if (isLoading) return (
+    <div className="skeleton-page">
+      <div className="skeleton skeleton-heading" />
+      <div className="skeleton skeleton-card" />
+    </div>
+  );
 
   return (
     <div className="page">

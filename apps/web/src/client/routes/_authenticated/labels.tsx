@@ -34,7 +34,14 @@ export function LabelsPage() {
     setEditColor(label.color);
   }
 
-  if (isLoading) return <div className="page"><p>Loading labels...</p></div>;
+  if (isLoading) return (
+    <div className="skeleton-page">
+      <div className="skeleton skeleton-heading" />
+      <div className="skeleton skeleton-card" />
+      <div className="skeleton skeleton-card-sm" />
+      <div className="skeleton skeleton-card-sm" />
+    </div>
+  );
 
   return (
     <div className="page">

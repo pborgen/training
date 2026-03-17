@@ -14,7 +14,11 @@ export { generateAnswer } from "./generation.js";
 export {
   ensureRagTables,
   getKnowledgeChunkCount,
+  getAllKnowledgeChunks,
+  getKnowledgeChunk,
   insertKnowledgeChunk,
+  updateKnowledgeChunk,
+  deleteKnowledgeChunk,
   searchSimilarChunks,
   saveChatMessage,
   getChatHistory,

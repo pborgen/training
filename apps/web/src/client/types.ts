@@ -111,6 +111,15 @@ export interface ScheduledWorkout {
   clientName?: string;
 }
 
+export interface KnowledgeChunk {
+  id: string;
+  exerciseId: string;
+  chunkType: string;
+  title: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface AdminRoutine extends Routine {
   email: string;
   ownerName: string;

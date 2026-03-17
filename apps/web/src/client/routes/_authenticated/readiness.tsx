@@ -128,6 +128,7 @@ export function ReadinessPage() {
                 value={scores[ind.key]}
                 onChange={(e) => updateScore(ind.key, Number(e.target.value))}
                 className="readiness-slider"
+                style={{ "--fill": `${((scores[ind.key] - 1) / 9) * 100}%` } as React.CSSProperties}
               />
               <div className="slider-range">
                 <span>{ind.low}</span>
@@ -159,6 +160,31 @@ export function ReadinessPage() {
         <button className="btn-full" onClick={cancelEdit} style={{ marginTop: 8 }}>Cancel Edit</button>
       )}
       {status && <p className="hint" style={{ marginTop: 8 }}>{status}</p>}
+
+      {/* Trend Chart */}
+      {history.length >= 2 && (
+        <div className="card">
+          <h2>Trend</h2>
+          <div className="readiness-trend">
+            {[...history].reverse().map((entry) => {
+              const entryScores: Scores = {
+                sleepQuality: entry.sleepQuality, energy: entry.energy,
+                stress: entry.stress, mood: entry.mood,
+                soreness: entry.soreness, motivation: entry.motivation,
+              };
+              const s = averageScore(entryScores);
+              return (
+                <div
+                  key={entry.id}
+                  className="readiness-trend-bar"
+                  style={{ height: `${(s / 10) * 100}%`, background: scoreColor(s) }}
+                  title={`${s} — ${new Date(entry.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* History */}
       {history.length > 0 && (

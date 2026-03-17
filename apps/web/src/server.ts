@@ -17,7 +17,9 @@ import {
   getAllRoutinesAdmin, seedDevRoutines, getSetting, setSetting,
 } from "./db.js";
 import {
-  ensureRagTables, getKnowledgeChunkCount, saveChatMessage, getChatHistory,
+  ensureRagTables, getKnowledgeChunkCount, getAllKnowledgeChunks, getKnowledgeChunk,
+  insertKnowledgeChunk, updateKnowledgeChunk, deleteKnowledgeChunk,
+  saveChatMessage, getChatHistory,
   seedKnowledgeBase, retrieveRelevantChunks, generateAnswer,
 } from "training-rag";
 
@@ -650,6 +652,63 @@ app.get("/api/rag/chat/:sessionId", async (req, res) => {
     const email = await requireUser(req, res);
     if (!email) return;
     res.json(await getChatHistory(email, req.params.sessionId));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/* ── Admin Knowledge Management ───────────── */
+
+app.get("/api/admin/knowledge", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    res.json(await getAllKnowledgeChunks());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.get("/api/admin/knowledge/:id", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const chunk = await getKnowledgeChunk(req.params.id);
+    if (!chunk) return res.status(404).json({ error: "Not found" });
+    res.json(chunk);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.post("/api/admin/knowledge", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const { exerciseId, chunkType, title, content } = req.body;
+    if (!exerciseId || !chunkType || !title || !content) return res.status(400).json({ error: "Missing fields" });
+    const id = `${exerciseId}-${chunkType}`;
+    await insertKnowledgeChunk(id, exerciseId, chunkType, title, content);
+    res.json({ ok: true, id });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.put("/api/admin/knowledge/:id", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const { title, content } = req.body;
+    if (!title || !content) return res.status(400).json({ error: "Missing fields" });
+    await updateKnowledgeChunk(req.params.id, title, content);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.delete("/api/admin/knowledge/:id", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    await deleteKnowledgeChunk(req.params.id);
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }

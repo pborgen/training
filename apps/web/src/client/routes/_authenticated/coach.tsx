@@ -70,7 +70,13 @@ export function CoachPage() {
     });
   }
 
-  if (!status) return <div className="page-loading">Loading...</div>;
+  if (!status) return (
+    <div className="skeleton-page">
+      <div className="skeleton skeleton-heading" />
+      <div className="skeleton skeleton-card" />
+      <div className="skeleton skeleton-card-sm" />
+    </div>
+  );
 
   if (!status.seeded) {
     return (
@@ -126,6 +132,7 @@ export function CoachPage() {
 
         {messages.map((msg, i) => (
           <div key={i} className={`coach-msg coach-msg-${msg.role}`}>
+            {msg.role === "assistant" && <div className="coach-avatar">P</div>}
             <div className="coach-msg-label">{msg.role === "user" ? "You" : "Coach"}</div>
             <div className="coach-msg-content">{msg.content}</div>
             {msg.sources && msg.sources.length > 0 && (showDebug || expandedSources.has(i)) && (
@@ -151,6 +158,7 @@ export function CoachPage() {
 
         {chatMutation.isPending && (
           <div className="coach-msg coach-msg-assistant">
+            <div className="coach-avatar">P</div>
             <div className="coach-msg-label">Coach</div>
             <div className="coach-msg-content coach-typing">Thinking...</div>
           </div>
@@ -166,12 +174,18 @@ export function CoachPage() {
           handleSend();
         }}
       >
-        <input
-          type="text"
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
           placeholder="Ask about exercises, form, programming..."
           disabled={chatMutation.isPending}
+          rows={3}
           autoFocus
         />
         <button type="submit" className="btn-primary" disabled={chatMutation.isPending || !input.trim()}>

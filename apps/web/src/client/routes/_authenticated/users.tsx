@@ -27,7 +27,14 @@ export function UsersPage() {
     setSelectedLabels(prev => prev.includes(labelId) ? prev.filter(id => id !== labelId) : [...prev, labelId]);
   }
 
-  if (isLoading) return <div className="page"><p>Loading users...</p></div>;
+  if (isLoading) return (
+    <div className="skeleton-page">
+      <div className="skeleton skeleton-heading" />
+      <div className="skeleton skeleton-card-sm" />
+      <div className="skeleton skeleton-card" />
+      <div className="skeleton skeleton-card" />
+    </div>
+  );
 
   const admins = users.filter(u => u.role === "admin");
   let clients = users.filter(u => u.role !== "admin");

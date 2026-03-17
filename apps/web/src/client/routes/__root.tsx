@@ -3,14 +3,15 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../auth";
 
 const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { to: "/schedule", label: "Schedule", icon: "calendar", clientOnly: true },
-  { to: "/workout", label: "Workout", icon: "workout" },
-  { to: "/readiness", label: "Readiness", icon: "readiness" },
+  { to: "/dashboard", label: "Dashboard", icon: "dashboard", bottomNav: true },
+  { to: "/schedule", label: "Schedule", icon: "calendar", clientOnly: true, bottomNav: true },
+  { to: "/workout", label: "Workout", icon: "workout", bottomNav: true },
+  { to: "/readiness", label: "Readiness", icon: "readiness", bottomNav: true },
   { to: "/exercises", label: "Exercises", icon: "exercises" },
-  { to: "/coach", label: "Coach", icon: "coach" },
-  { to: "/calendar", label: "Calendar", icon: "calendar", adminOnly: true },
-  { to: "/users", label: "Users", icon: "users", adminOnly: true },
+  { to: "/coach", label: "Coach", icon: "coach", bottomNav: true },
+  { to: "/calendar", label: "Calendar", icon: "calendar", adminOnly: true, bottomNav: true },
+  { to: "/users", label: "Users", icon: "users", adminOnly: true, bottomNav: true },
+  { to: "/knowledge", label: "Knowledge", icon: "knowledge", adminOnly: true },
   { to: "/labels", label: "Labels", icon: "label", adminOnly: true },
   { to: "/profile", label: "Profile", icon: "profile" },
 ] as const;
@@ -28,6 +29,8 @@ function NavIcon({ name, size = 22 }: { name: string; size?: number }) {
       return <svg viewBox="0 0 24 24" {...s}><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="20" cy="18" r="2" fill="currentColor" stroke="none"/></svg>;
     case "profile":
       return <svg viewBox="0 0 24 24" {...s}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+    case "knowledge":
+      return <svg viewBox="0 0 24 24" {...s}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8M8 11h6"/></svg>;
     case "label":
       return <svg viewBox="0 0 24 24" {...s}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
     case "users":
@@ -125,9 +128,9 @@ export function RootLayout() {
             </div>
           </aside>
 
-          {/* Bottom nav (mobile) */}
+          {/* Bottom nav (mobile) — limited to core items */}
           <nav className="bottom-nav">
-            {visibleNavItems.map((item) => (
+            {visibleNavItems.filter(item => "bottomNav" in item && item.bottomNav).map((item) => (
               <button
                 key={item.to}
                 className={`nav-item ${path === item.to ? "active" : ""}`}

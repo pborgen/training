@@ -59,6 +59,52 @@ export async function insertKnowledgeChunk(
   `;
 }
 
+export async function getAllKnowledgeChunks() {
+  const rows = await sql()`
+    SELECT id, exercise_id, chunk_type, title, content, created_at
+    FROM exercise_knowledge
+    ORDER BY exercise_id, chunk_type
+  `;
+  return rows.map(r => ({
+    id: r.id as string,
+    exerciseId: r.exercise_id as string,
+    chunkType: r.chunk_type as string,
+    title: r.title as string,
+    content: r.content as string,
+    createdAt: r.created_at as string,
+  }));
+}
+
+export async function getKnowledgeChunk(id: string) {
+  const rows = await sql()`
+    SELECT id, exercise_id, chunk_type, title, content, created_at
+    FROM exercise_knowledge WHERE id = ${id}
+  `;
+  if (!rows.length) return null;
+  const r = rows[0];
+  return {
+    id: r.id as string,
+    exerciseId: r.exercise_id as string,
+    chunkType: r.chunk_type as string,
+    title: r.title as string,
+    content: r.content as string,
+    createdAt: r.created_at as string,
+  };
+}
+
+export async function updateKnowledgeChunk(id: string, title: string, content: string) {
+  await sql()`
+    UPDATE exercise_knowledge
+    SET title = ${title}, content = ${content},
+        content_tsv = to_tsvector('english', ${title} || ' ' || ${content})
+    WHERE id = ${id}
+  `;
+}
+
+export async function deleteKnowledgeChunk(id: string) {
+  await sql()`DELETE FROM exercise_knowledge WHERE id = ${id}`;
+}
+
 export async function searchSimilarChunks(query: string, topK: number) {
   const rows = await sql()`
     SELECT id, exercise_id, chunk_type, title, content,

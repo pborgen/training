@@ -151,7 +151,14 @@ export function ExercisesPage() {
       {/* My Exercises */}
       <div className="card">
         <h2>My Exercises</h2>
-        {userExercises.length === 0 && <p className="hint">No custom exercises yet</p>}
+        {userExercises.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M6.5 12h11M2 8.5v7M22 8.5v7M4.25 7v10M19.75 7v10"/></svg>
+            </div>
+            <p>No custom exercises yet. Use the form above to add your own.</p>
+          </div>
+        )}
         {userExercises.map((ex) => (
           <div key={ex.id} className={`row-card exercise-card ${editingId === ex.id ? "exercise-card-editing" : ""}`}>
             {editingId === ex.id ? (

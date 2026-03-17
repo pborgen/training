@@ -72,6 +72,7 @@ export const saveWorkoutLog = (entry: Omit<WorkoutLogEntry, "id">) => apiFetch<{
 // Readiness Check-ins
 export const fetchReadiness = (limit = 0) => apiFetch<ReadinessCheckin[]>("GET", limit ? `/api/readiness?limit=${limit}` : "/api/readiness");
 export const saveReadiness = (c: Omit<ReadinessCheckin, "id" | "createdAt">) => apiFetch<{ ok: boolean; checkin: ReadinessCheckin }>("POST", "/api/readiness", c);
+export const updateReadiness = (id: string, c: Omit<ReadinessCheckin, "id" | "createdAt">) => apiFetch<{ ok: boolean; checkin: ReadinessCheckin }>("PUT", `/api/readiness/${id}`, c);
 export const deleteReadiness = (id: string) => apiFetch<{ ok: boolean }>("DELETE", `/api/readiness/${id}`);
 
 // Admin

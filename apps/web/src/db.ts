@@ -458,11 +458,16 @@ export async function deleteUserExercise(email: string, id: string) {
   await sql()`DELETE FROM user_exercises WHERE email = ${email} AND id = ${id}`;
 }
 
+function parseJsonb(val: unknown): unknown[] {
+  if (typeof val === "string") return JSON.parse(val);
+  return (val as unknown[]) || [];
+}
+
 function toUserExObj(r: Record<string, unknown>) {
   return {
     id: r.id, name: r.name, type: r.type, muscleGroup: r.muscle_group,
     defaultSets: r.default_sets, defaultReps: r.default_reps,
-    defaultWeightKg: r.default_weight_kg, media: r.media || [], createdAt: r.created_at,
+    defaultWeightKg: r.default_weight_kg, media: parseJsonb(r.media), createdAt: r.created_at,
   };
 }
 
@@ -512,7 +517,7 @@ export async function deleteRoutine(email: string, id: string) {
 function toRoutineObj(r: Record<string, unknown>) {
   return {
     id: r.id, name: r.name, goal: r.goal, daysPerWeek: r.days_per_week,
-    exercises: r.exercises || [], createdAt: r.created_at, updatedAt: r.updated_at,
+    exercises: parseJsonb(r.exercises), createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
 
@@ -544,7 +549,7 @@ export async function getWorkoutLogEntry(email: string, id: string) {
 function toWorkoutObj(r: Record<string, unknown>) {
   return {
     id: r.id, routineId: r.routine_id, routineName: r.routine_name,
-    startedAt: r.started_at, completedAt: r.completed_at, exercises: r.exercises || [],
+    startedAt: r.started_at, completedAt: r.completed_at, exercises: parseJsonb(r.exercises),
   };
 }
 
@@ -567,6 +572,22 @@ export async function createReadinessCheckin(email: string, c: Record<string, un
             ${(c.notes as string) || ""})
   `;
   return { id, ...c, createdAt: new Date().toISOString() };
+}
+
+export async function updateReadinessCheckin(email: string, id: string, c: Record<string, unknown>) {
+  const rows = await sql()`
+    UPDATE readiness_checkins SET
+      sleep_quality = ${(c.sleepQuality as number) || 5},
+      energy = ${(c.energy as number) || 5},
+      stress = ${(c.stress as number) || 5},
+      mood = ${(c.mood as number) || 5},
+      soreness = ${(c.soreness as number) || 5},
+      motivation = ${(c.motivation as number) || 5},
+      notes = ${(c.notes as string) || ""}
+    WHERE email = ${email} AND id = ${id}
+    RETURNING *
+  `;
+  return rows[0] ? toReadinessObj(rows[0]) : null;
 }
 
 export async function deleteReadinessCheckin(email: string, id: string) {

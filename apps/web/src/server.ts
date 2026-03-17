@@ -10,7 +10,7 @@ import {
   getUserExercises, createUserExercise, updateUserExercise, deleteUserExercise,
   getRoutines, getRoutine, createRoutine, updateRoutine, deleteRoutine,
   getWorkoutLog, createWorkoutLog, getWorkoutLogEntry,
-  getReadinessCheckins, createReadinessCheckin, deleteReadinessCheckin,
+  getReadinessCheckins, createReadinessCheckin, updateReadinessCheckin, deleteReadinessCheckin,
   getUserByUsername, seedDevUsers, getUserRole, getAllUsers, ensureGoogleUser,
   getAllLabels, createLabel, updateLabel, deleteLabel, getLabelsForAllUsers, setUserLabels,
   getScheduledWorkouts, getScheduledWorkoutsForAll, createScheduledWorkout, deleteScheduledWorkout,
@@ -564,6 +564,18 @@ app.post("/api/readiness", async (req, res) => {
     if (!email) return;
     const id = req.body.id || uuid();
     const checkin = await createReadinessCheckin(email, req.body, id);
+    res.json({ ok: true, checkin });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+app.put("/api/readiness/:id", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    const checkin = await updateReadinessCheckin(email, req.params.id, req.body);
+    if (!checkin) return res.status(404).json({ error: "Not found" });
     res.json({ ok: true, checkin });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });

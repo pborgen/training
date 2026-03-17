@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useReadiness, useSaveReadiness, useDeleteReadiness } from "../../hooks/useReadiness";
+import { useReadiness, useSaveReadiness, useUpdateReadiness, useDeleteReadiness } from "../../hooks/useReadiness";
+import type { ReadinessCheckin } from "../../types";
 
 const INDICATORS = [
   { key: "sleepQuality", label: "Sleep Quality", low: "Poor", high: "Great" },
@@ -31,40 +32,79 @@ function scoreColor(score: number): string {
 export function ReadinessPage() {
   const { data: history = [] } = useReadiness(10);
   const save = useSaveReadiness();
+  const update = useUpdateReadiness();
   const remove = useDeleteReadiness();
 
-  const [scores, setScores] = useState<Scores>(() =>
-    Object.fromEntries(INDICATORS.map((i) => [i.key, 5])),
-  );
+  const defaultScores = () => Object.fromEntries(INDICATORS.map((i) => [i.key, 5]));
+
+  const [scores, setScores] = useState<Scores>(defaultScores);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("");
   const [justSaved, setJustSaved] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   function updateScore(key: string, value: number) {
     setScores((prev) => ({ ...prev, [key]: value }));
   }
 
+  function startEdit(entry: ReadinessCheckin) {
+    setEditingId(entry.id);
+    setScores({
+      sleepQuality: entry.sleepQuality,
+      energy: entry.energy,
+      stress: entry.stress,
+      mood: entry.mood,
+      soreness: entry.soreness,
+      motivation: entry.motivation,
+    });
+    setNotes(entry.notes || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setScores(defaultScores());
+    setNotes("");
+  }
+
   function handleSave() {
-    save.mutate(
-      { ...scores, notes } as any,
-      {
-        onSuccess: () => {
-          setStatus("");
-          setJustSaved(true);
-          setScores(Object.fromEntries(INDICATORS.map((i) => [i.key, 5])));
-          setNotes("");
-          setTimeout(() => setJustSaved(false), 2000);
+    if (editingId) {
+      update.mutate(
+        { id: editingId, ...scores, notes, createdAt: "" } as ReadinessCheckin,
+        {
+          onSuccess: () => {
+            setStatus("");
+            setJustSaved(true);
+            setEditingId(null);
+            setScores(defaultScores());
+            setNotes("");
+            setTimeout(() => setJustSaved(false), 2000);
+          },
+          onError: () => setStatus("Failed to update"),
         },
-        onError: () => setStatus("Failed to save"),
-      },
-    );
+      );
+    } else {
+      save.mutate(
+        { ...scores, notes } as any,
+        {
+          onSuccess: () => {
+            setStatus("");
+            setJustSaved(true);
+            setScores(defaultScores());
+            setNotes("");
+            setTimeout(() => setJustSaved(false), 2000);
+          },
+          onError: () => setStatus("Failed to save"),
+        },
+      );
+    }
   }
 
   const avg = averageScore(scores);
 
   return (
     <div className="page">
-      <h1>Readiness Check-in</h1>
+      <h1>{editingId ? "Edit Check-in" : "Readiness Check-in"}</h1>
 
       {/* Readiness score preview */}
       <div className="card" style={{ textAlign: "center" }}>
@@ -112,9 +152,12 @@ export function ReadinessPage() {
         </div>
       </div>
 
-      <button className="btn-primary btn-full" onClick={handleSave} disabled={save.isPending}>
-        {save.isPending ? "Saving..." : justSaved ? "Saved!" : "Log Check-in"}
+      <button className="btn-primary btn-full" onClick={handleSave} disabled={save.isPending || update.isPending}>
+        {(save.isPending || update.isPending) ? "Saving..." : justSaved ? "Saved!" : editingId ? "Update Check-in" : "Log Check-in"}
       </button>
+      {editingId && (
+        <button className="btn-full" onClick={cancelEdit} style={{ marginTop: 8 }}>Cancel Edit</button>
+      )}
       {status && <p className="hint" style={{ marginTop: 8 }}>{status}</p>}
 
       {/* History */}
@@ -146,6 +189,7 @@ export function ReadinessPage() {
                   </div>
                 </div>
                 <div className="btn-row">
+                  <button className="btn-secondary" onClick={() => startEdit(entry)}>Edit</button>
                   <button className="btn-delete" onClick={() => { if (confirm("Delete this check-in?")) remove.mutate(entry.id); }}>Delete</button>
                 </div>
               </div>

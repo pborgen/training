@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "workspaces": [
     "apps/web",
-    "apps/agent"
+    "apps/agent",
+    "apps/rag"
   ],
   "scripts": {
     "web:dev": "npm --workspace apps/web run dev",
@@ -12,6 +13,7 @@
     "web:start": "npm --workspace apps/web run start",
     "agent:dev": "npm --workspace apps/agent run dev",
     "agent:build": "npm --workspace apps/agent run build",
-    "agent:start": "npm --workspace apps/agent run start"
+    "agent:start": "npm --workspace apps/agent run start",
+    "rag:build": "npm --workspace apps/rag run build"
   }
 }

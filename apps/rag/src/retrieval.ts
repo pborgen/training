@@ -1,4 +1,4 @@
-import { searchSimilarChunks } from "../db.js";
+import { searchSimilarChunks } from "./db.js";
 import type { RelevantChunk } from "./types.js";
 
 /**

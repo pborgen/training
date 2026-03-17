@@ -1,5 +1,5 @@
 import { EXERCISE_KNOWLEDGE } from "./knowledge.js";
-import { insertKnowledgeChunk, getKnowledgeChunkCount } from "../db.js";
+import { insertKnowledgeChunk, getKnowledgeChunkCount } from "./db.js";
 
 /**
  * Seed the knowledge base by inserting all exercise knowledge chunks

@@ -7,6 +7,7 @@ Fitness coaching platform — admin manages clients, schedules workouts, and tra
 Monorepo with npm workspaces:
 
 - `apps/web` — Full-stack app (Express API + React SPA)
+- `apps/rag` — RAG exercise coach library (knowledge base, retrieval, generation, DB)
 - `apps/agent` — Claude Agent SDK scaffold
 
 ## Tech Stack

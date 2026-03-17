@@ -15,11 +15,11 @@ import {
   getAllLabels, createLabel, updateLabel, deleteLabel, getLabelsForAllUsers, setUserLabels,
   getScheduledWorkouts, getScheduledWorkoutsForAll, createScheduledWorkout, deleteScheduledWorkout,
   getAllRoutinesAdmin, seedDevRoutines, getSetting, setSetting,
-  ensureRagTables, getKnowledgeChunkCount, saveChatMessage, getChatHistory,
 } from "./db.js";
-import { seedKnowledgeBase } from "./rag/embeddings.js";
-import { retrieveRelevantChunks } from "./rag/retrieval.js";
-import { generateAnswer } from "./rag/generation.js";
+import {
+  ensureRagTables, getKnowledgeChunkCount, saveChatMessage, getChatHistory,
+  seedKnowledgeBase, retrieveRelevantChunks, generateAnswer,
+} from "training-rag";
 
 export const app = express();
 const port = Number(process.env.PORT || 8080);

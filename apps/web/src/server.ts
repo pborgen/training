@@ -24,6 +24,7 @@ import {
   seedKnowledgeBase, retrieveRelevantChunks, generateAnswer,
 } from "training-rag";
 
+export { ensureRagTables };
 export const app = express();
 const port = Number(process.env.PORT || 8080);
 const googleClientId = process.env.GOOGLE_CLIENT_ID || "";

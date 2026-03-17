@@ -10,7 +10,7 @@
     "dev:server": "tsx watch --env-file=.env src/server.ts",
     "dev:client": "vite --config vite.config.ts",
     "start": "npm run build && node dist/server.js",
-    "vercel-build": "tsc -p tsconfig.server.json && vite build"
+    "vercel-build": "cd ../rag && npx tsc && cd ../web && tsc -p tsconfig.server.json && vite build"
   },
   "dependencies": {
     "training-rag": "*",

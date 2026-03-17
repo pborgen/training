@@ -690,12 +690,12 @@ export async function getAdminStats() {
   `;
   const [knowledgeCount] = await sql()`
     SELECT count(*)::int AS n FROM (
-      SELECT 1 FROM information_schema.tables WHERE table_name = 'knowledge_chunks'
+      SELECT 1 FROM information_schema.tables WHERE table_name = 'exercise_knowledge'
     ) t
   `;
   let knowledgeChunks = 0;
   if (knowledgeCount.n > 0) {
-    const [kc] = await sql()`SELECT count(*)::int AS n FROM knowledge_chunks`;
+    const [kc] = await sql()`SELECT count(*)::int AS n FROM exercise_knowledge`;
     knowledgeChunks = kc.n;
   }
 

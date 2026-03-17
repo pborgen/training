@@ -124,3 +124,35 @@ export interface AdminRoutine extends Routine {
   email: string;
   ownerName: string;
 }
+
+export interface AdminStats {
+  users: { total: number; clients: number; admins: number };
+  routines: number;
+  exercises: { catalog: number; custom: number };
+  workouts: { total: number; thisWeek: number };
+  checkins: { total: number; thisWeek: number };
+  knowledgeChunks: number;
+}
+
+export interface ClientSummary {
+  email: string;
+  username: string;
+  fullName: string;
+  createdAt: string;
+  routineCount: number;
+  workoutCount: number;
+  lastWorkout: string | null;
+  checkinCount: number;
+  lastCheckin: string | null;
+}
+
+export interface RecentWorkoutAdmin {
+  id: string;
+  routineId: string;
+  routineName: string;
+  startedAt: string;
+  completedAt: string;
+  exercises: unknown[];
+  email: string;
+  clientName: string;
+}

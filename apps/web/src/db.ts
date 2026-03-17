@@ -663,3 +663,93 @@ function toScheduledObj(r: Record<string, unknown>) {
   };
 }
 
+/* ── Admin stats (aggregate) ──────────────── */
+
+export async function getAdminStats() {
+  const [userCounts] = await sql()`
+    SELECT
+      count(*)::int AS total,
+      count(*) FILTER (WHERE role = 'client')::int AS clients,
+      count(*) FILTER (WHERE role = 'admin')::int AS admins
+    FROM users
+  `;
+  const [routineCount] = await sql()`SELECT count(*)::int AS n FROM routines`;
+  const [exerciseCount] = await sql()`SELECT count(*)::int AS n FROM exercises`;
+  const [userExerciseCount] = await sql()`SELECT count(*)::int AS n FROM user_exercises`;
+  const [workoutCounts] = await sql()`
+    SELECT
+      count(*)::int AS total,
+      count(*) FILTER (WHERE completed_at >= now() - interval '7 days')::int AS this_week
+    FROM workout_log
+  `;
+  const [checkinCounts] = await sql()`
+    SELECT
+      count(*)::int AS total,
+      count(*) FILTER (WHERE created_at >= now() - interval '7 days')::int AS this_week
+    FROM readiness_checkins
+  `;
+  const [knowledgeCount] = await sql()`
+    SELECT count(*)::int AS n FROM (
+      SELECT 1 FROM information_schema.tables WHERE table_name = 'knowledge_chunks'
+    ) t
+  `;
+  let knowledgeChunks = 0;
+  if (knowledgeCount.n > 0) {
+    const [kc] = await sql()`SELECT count(*)::int AS n FROM knowledge_chunks`;
+    knowledgeChunks = kc.n;
+  }
+
+  return {
+    users: { total: userCounts.total, clients: userCounts.clients, admins: userCounts.admins },
+    routines: routineCount.n as number,
+    exercises: { catalog: exerciseCount.n as number, custom: userExerciseCount.n as number },
+    workouts: { total: workoutCounts.total, thisWeek: workoutCounts.this_week },
+    checkins: { total: checkinCounts.total, thisWeek: checkinCounts.this_week },
+    knowledgeChunks,
+  };
+}
+
+export async function getClientSummaries() {
+  const rows = await sql()`
+    SELECT
+      u.email,
+      u.username,
+      p.full_name,
+      u.created_at,
+      (SELECT count(*)::int FROM routines r WHERE r.email = u.email) AS routine_count,
+      (SELECT count(*)::int FROM workout_log w WHERE w.email = u.email) AS workout_count,
+      (SELECT max(w.completed_at) FROM workout_log w WHERE w.email = u.email) AS last_workout,
+      (SELECT count(*)::int FROM readiness_checkins rc WHERE rc.email = u.email) AS checkin_count,
+      (SELECT max(rc.created_at) FROM readiness_checkins rc WHERE rc.email = u.email) AS last_checkin
+    FROM users u
+    LEFT JOIN profiles p ON u.email = p.email
+    WHERE u.role = 'client'
+    ORDER BY p.full_name, u.username
+  `;
+  return rows.map(r => ({
+    email: r.email as string,
+    username: r.username as string,
+    fullName: (r.full_name as string) || "",
+    createdAt: r.created_at as string,
+    routineCount: r.routine_count as number,
+    workoutCount: r.workout_count as number,
+    lastWorkout: r.last_workout as string | null,
+    checkinCount: r.checkin_count as number,
+    lastCheckin: r.last_checkin as string | null,
+  }));
+}
+
+export async function getRecentWorkoutsAll(limit: number) {
+  const rows = await sql()`
+    SELECT w.*, p.full_name FROM workout_log w
+    LEFT JOIN profiles p ON w.email = p.email
+    ORDER BY w.completed_at DESC
+    LIMIT ${limit}
+  `;
+  return rows.map(r => ({
+    ...toWorkoutObj(r),
+    email: r.email as string,
+    clientName: (r.full_name as string) || "",
+  }));
+}
+

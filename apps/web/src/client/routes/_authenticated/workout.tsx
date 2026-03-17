@@ -122,7 +122,7 @@ export function WorkoutPage() {
   }
 
   function updateSet(idx: number, field: "repsCompleted" | "weightUsedKg", value: number) {
-    setCurrentSets((prev) => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+    setCurrentSets((prev) => prev.map((s, i) => i === idx ? { ...s, [field]: Math.max(0, value) } : s));
   }
 
   // Summary view

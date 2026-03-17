@@ -4,7 +4,9 @@ import { useUserExercises, useDeleteExercise } from "../../hooks/useExercises";
 import { useWorkoutLog } from "../../hooks/useWorkoutLog";
 import { useReadiness } from "../../hooks/useReadiness";
 import { useUnits } from "../../hooks/useProfile";
-import type { ReadinessCheckin, WorkoutLogEntry } from "../../types";
+import { useAuth } from "../../auth";
+import { useAdminDashboard } from "../../hooks/useAdminDashboard";
+import type { ReadinessCheckin, WorkoutLogEntry, ClientSummary } from "../../types";
 
 function EmptyIcon({ type }: { type: "routine" | "exercise" | "workout" }) {
   const s = { width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -79,7 +81,156 @@ function WeekActivityChart({ log, checkins }: { log: WorkoutLogEntry[]; checkins
   );
 }
 
-export function DashboardPage() {
+/* ── Admin Dashboard ────────────────────── */
+
+function StatCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: boolean }) {
+  return (
+    <div className={`admin-stat-card${accent ? " accent" : ""}`}>
+      <div className="admin-stat-value">{value}</div>
+      <div className="admin-stat-label">{label}</div>
+      {sub && <div className="admin-stat-sub">{sub}</div>}
+    </div>
+  );
+}
+
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return "Never";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function clientActivityLevel(c: ClientSummary): { label: string; cls: string } {
+  if (!c.lastWorkout) return { label: "Inactive", cls: "inactive" };
+  const daysSince = Math.floor((Date.now() - new Date(c.lastWorkout).getTime()) / 86400000);
+  if (daysSince <= 3) return { label: "Active", cls: "active" };
+  if (daysSince <= 7) return { label: "Recent", cls: "recent" };
+  return { label: "Stale", cls: "stale" };
+}
+
+function AdminDashboard() {
+  const router = useRouter();
+  const { data, isLoading } = useAdminDashboard();
+
+  if (isLoading || !data) {
+    return (
+      <div className="skeleton-page">
+        <div className="skeleton skeleton-heading" />
+        <div className="admin-stats-grid">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton skeleton-card" />)}
+        </div>
+        <div className="skeleton skeleton-card" />
+      </div>
+    );
+  }
+
+  const { stats, clients, recentWorkouts } = data;
+
+  return (
+    <div className="page">
+      <h1>Admin Dashboard</h1>
+
+      {/* Stats overview */}
+      <div className="admin-stats-grid">
+        <StatCard label="Clients" value={stats.users.clients} sub={`${stats.users.total} total users`} accent />
+        <StatCard label="Routines" value={stats.routines} sub={`across all users`} />
+        <StatCard label="Workouts" value={stats.workouts.thisWeek} sub={`this week · ${stats.workouts.total} total`} accent />
+        <StatCard label="Check-ins" value={stats.checkins.thisWeek} sub={`this week · ${stats.checkins.total} total`} />
+      </div>
+
+      {/* Secondary stats */}
+      <div className="admin-stats-row">
+        <div className="admin-chip">{stats.exercises.catalog} catalog exercises</div>
+        <div className="admin-chip">{stats.exercises.custom} custom exercises</div>
+        {stats.knowledgeChunks > 0 && <div className="admin-chip">{stats.knowledgeChunks} knowledge chunks</div>}
+      </div>
+
+      {/* Quick actions */}
+      <div className="actions-grid">
+        <button className="action-card primary" onClick={() => router.navigate({ to: "/calendar" })}>
+          <span className="action-icon">&#128197;</span>
+          Calendar
+        </button>
+        <button className="action-card" onClick={() => router.navigate({ to: "/users" })}>
+          <span className="action-icon">&#128101;</span>
+          Users
+        </button>
+        <button className="action-card" onClick={() => router.navigate({ to: "/knowledge" })}>
+          <span className="action-icon">&#128218;</span>
+          Knowledge
+        </button>
+        <button className="action-card" onClick={() => router.navigate({ to: "/labels" })}>
+          <span className="action-icon">&#127991;</span>
+          Labels
+        </button>
+      </div>
+
+      {/* Client overview */}
+      <section className="card">
+        <h2>Client Overview</h2>
+        {clients.length === 0 ? (
+          <div className="empty-state">
+            <p>No clients yet.</p>
+          </div>
+        ) : (
+          <div className="admin-client-table">
+            <div className="admin-client-header">
+              <span>Client</span>
+              <span>Routines</span>
+              <span>Workouts</span>
+              <span>Check-ins</span>
+              <span>Last Active</span>
+              <span>Status</span>
+            </div>
+            {clients.map((c) => {
+              const activity = clientActivityLevel(c);
+              return (
+                <div key={c.email} className="admin-client-row" onClick={() => router.navigate({ to: "/users" })}>
+                  <span className="admin-client-name">
+                    <strong>{c.fullName || c.username}</strong>
+                    <span className="hint">{c.email}</span>
+                  </span>
+                  <span className="admin-client-num">{c.routineCount}</span>
+                  <span className="admin-client-num">{c.workoutCount}</span>
+                  <span className="admin-client-num">{c.checkinCount}</span>
+                  <span className="admin-client-time">{timeAgo(c.lastWorkout)}</span>
+                  <span className={`admin-activity-badge ${activity.cls}`}>{activity.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Recent workouts */}
+      {recentWorkouts.length > 0 && (
+        <section className="card">
+          <h2>Recent Workouts</h2>
+          {recentWorkouts.map((w) => (
+            <div key={w.id} className="row-card">
+              <div>
+                <strong>{w.clientName || w.email}</strong>
+                <span className="hint" style={{ marginLeft: 8 }}>{w.routineName}</span>
+              </div>
+              <span className="hint block">
+                {w.completedAt ? timeAgo(w.completedAt) : "In progress"} · {(w.exercises as unknown[]).length} exercises
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
+    </div>
+  );
+}
+
+/* ── Client Dashboard ───────────────────── */
+
+function ClientDashboard() {
   const router = useRouter();
   const units = useUnits();
   const { data: routines = [] } = useRoutines();
@@ -197,4 +348,12 @@ export function DashboardPage() {
       </section>
     </div>
   );
+}
+
+/* ── Router entry point ─────────────────── */
+
+export function DashboardPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  return isAdmin ? <AdminDashboard /> : <ClientDashboard />;
 }

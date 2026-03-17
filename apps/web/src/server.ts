@@ -15,6 +15,7 @@ import {
   getAllLabels, createLabel, updateLabel, deleteLabel, getLabelsForAllUsers, setUserLabels,
   getScheduledWorkouts, getScheduledWorkoutsForAll, createScheduledWorkout, deleteScheduledWorkout,
   getAllRoutinesAdmin, seedDevRoutines, getSetting, setSetting,
+  getAdminStats, getClientSummaries, getRecentWorkoutsAll,
 } from "./db.js";
 import {
   ensureRagTables, getKnowledgeChunkCount, getAllKnowledgeChunks, getKnowledgeChunk,
@@ -106,6 +107,20 @@ async function requireAdmin(req: express.Request, res: express.Response): Promis
   if (role !== "admin") { res.status(403).json({ error: "Forbidden" }); return null; }
   return email;
 }
+
+app.get("/api/admin/stats", async (req, res) => {
+  try {
+    if (!(await requireAdmin(req, res))) return;
+    const [stats, clients, recentWorkouts] = await Promise.all([
+      getAdminStats(),
+      getClientSummaries(),
+      getRecentWorkoutsAll(10),
+    ]);
+    res.json({ stats, clients, recentWorkouts });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
 
 app.get("/api/admin/users", async (req, res) => {
   try {

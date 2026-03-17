@@ -123,8 +123,12 @@ export const loginWithGoogle = (credential: string) =>
   fetch("/api/auth/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential }) })
     .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error || "Google login failed"); return data as { ok: boolean; email: string; role: string }; });
 
+// Admin Dashboard Stats
+import type { AdminStats, ClientSummary, RecentWorkoutAdmin, KnowledgeChunk } from "./types";
+export const fetchAdminDashboard = () =>
+  apiFetch<{ stats: AdminStats; clients: ClientSummary[]; recentWorkouts: RecentWorkoutAdmin[] }>("GET", "/api/admin/stats");
+
 // Admin Knowledge Management
-import type { KnowledgeChunk } from "./types";
 export const fetchKnowledgeChunks = () => apiFetch<KnowledgeChunk[]>("GET", "/api/admin/knowledge");
 export const fetchKnowledgeChunk = (id: string) => apiFetch<KnowledgeChunk>("GET", `/api/admin/knowledge/${id}`);
 export const createKnowledgeChunk = (data: { exerciseId: string; chunkType: string; title: string; content: string }) => apiFetch<{ ok: boolean; id: string }>("POST", "/api/admin/knowledge", data);

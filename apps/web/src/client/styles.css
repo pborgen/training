@@ -641,6 +641,177 @@ strong { font-weight: 600; }
 }
 .action-icon { font-size: 24px; }
 
+/* ── Admin Dashboard ─────────────────── */
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.admin-stat-card {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.admin-stat-card.accent {
+  border-color: rgba(203, 255, 46, 0.2);
+  background: rgba(203, 255, 46, 0.04);
+}
+.admin-stat-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text);
+}
+.admin-stat-card.accent .admin-stat-value {
+  color: var(--accent);
+}
+.admin-stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.admin-stat-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+.admin-stats-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.admin-chip {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+/* Client table */
+.admin-client-table {
+  overflow-x: auto;
+}
+.admin-client-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.admin-client-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 10px 12px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-client-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.admin-client-row:last-child {
+  border-bottom: none;
+}
+.admin-client-name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.admin-client-name strong {
+  font-size: 0.88rem;
+}
+.admin-client-name .hint {
+  font-size: 0.72rem;
+}
+.admin-client-num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+}
+.admin-client-time {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.admin-activity-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-align: center;
+  width: fit-content;
+  justify-self: center;
+}
+.admin-activity-badge.active {
+  background: rgba(76, 217, 100, 0.15);
+  color: var(--success);
+}
+.admin-activity-badge.recent {
+  background: rgba(203, 255, 46, 0.12);
+  color: var(--accent);
+}
+.admin-activity-badge.stale {
+  background: rgba(255, 149, 0, 0.12);
+  color: #ff9500;
+}
+.admin-activity-badge.inactive {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+}
+
+/* Responsive: stack client table on mobile */
+@media (max-width: 640px) {
+  .admin-client-header { display: none; }
+  .admin-client-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 4px 12px;
+    padding: 12px;
+  }
+  .admin-client-name { grid-column: 1; grid-row: 1; }
+  .admin-activity-badge { grid-column: 2; grid-row: 1; justify-self: end; }
+  .admin-client-num,
+  .admin-client-time {
+    font-size: 0.72rem;
+    text-align: left;
+    color: var(--muted);
+  }
+  .admin-client-num::before,
+  .admin-client-time::before {
+    font-weight: 400;
+  }
+  .admin-client-row > .admin-client-num:nth-child(2)::before { content: "Routines: "; }
+  .admin-client-row > .admin-client-num:nth-child(3)::before { content: "Workouts: "; }
+  .admin-client-row > .admin-client-num:nth-child(4)::before { content: "Check-ins: "; }
+  .admin-client-row > .admin-client-time::before { content: "Last active: "; }
+}
+
 /* ── Workout ─────────────────────────── */
 .workout-header {
   display: flex;

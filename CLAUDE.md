@@ -8,7 +8,7 @@ Monorepo with npm workspaces:
 
 - `apps/web` — Full-stack app (Express API + React SPA)
 - `apps/rag` — RAG exercise coach library (knowledge base, retrieval, generation, DB)
-- `apps/agent` — Claude Agent SDK scaffold
+- `apps/agent` — Python agents built on LangChain (standalone `uv` project, not an npm workspace). One folder per agent under `src/agents/`; `src/agents/common/` holds shared model/config helpers. Add new agents as sibling folders with their own `cli.py` entry and register in `pyproject.toml` `[project.scripts]`. Run with `uv run chatbot` from `apps/agent/`.
 
 ## Tech Stack
 

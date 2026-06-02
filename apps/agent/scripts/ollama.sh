@@ -4,6 +4,32 @@
 # On macOS, Docker runs Ollama CPU-only (no Metal GPU access).
 # For faster inference, install Ollama natively: https://ollama.com/download
 #
+# Models that run well on this laptop (Apple Silicon Mac).
+# Sizes are approximate on-disk / RAM footprint for the default Q4 quantization.
+# In Docker (CPU-only) stick to the "small" tier; native Ollama with Metal
+# can comfortably handle the "medium" tier, and "large" if you have 32GB+.
+#
+#   Small (~2-3GB, fast on CPU):
+#     llama3.2:1b        ~1.3GB  smallest, quick sanity checks
+#     llama3.2:3b        ~2.0GB  default — good balance for an agent
+#     gemma2:2b          ~1.6GB  Google, strong for size
+#     qwen2.5:3b         ~1.9GB  strong instruction-following
+#     phi3.5:3.8b        ~2.3GB  Microsoft, good reasoning for size
+#
+#   Medium (~4-6GB, needs Metal to feel snappy):
+#     llama3.1:8b        ~4.7GB  solid general-purpose
+#     qwen2.5:7b         ~4.7GB  strong on code + tool use
+#     mistral:7b         ~4.1GB  classic, well-rounded
+#     gemma2:9b          ~5.5GB  higher quality than 7Bs
+#     deepseek-r1:8b     ~5.2GB  reasoning-tuned, shows chain-of-thought
+#     qwen2.5-coder:7b   ~4.7GB  best small coder model
+#
+#   Large (16GB+ model, 32GB+ RAM recommended):
+#     qwen2.5:14b        ~9GB
+#     qwen2.5:32b        ~19GB   near GPT-4-class for many tasks
+#     llama3.3:70b       ~40GB   only on 64GB+ Macs
+#     mixtral:8x7b       ~26GB   MoE, fast per-token for size
+#
 # Usage:
 #   ./scripts/ollama.sh up [model]   Start container and pull a model (default: llama3.2:3b)
 #   ./scripts/ollama.sh down         Stop container (data persists in docker volume)

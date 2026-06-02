@@ -4,3 +4,10 @@ dist/
 **/dist/
 .env
 .env.local
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example

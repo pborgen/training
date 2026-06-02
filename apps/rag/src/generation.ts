@@ -1,7 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk";
 import type { RelevantChunk, RagSource } from "./types.js";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Claude on AWS Bedrock. Credentials resolve via the standard AWS chain
+// (instance role in App Runner, env vars / SSO locally); region from AWS_REGION.
+const anthropic = new AnthropicBedrock({
+  awsRegion: process.env.AWS_REGION ?? "us-east-1",
+});
+
+// Bedrock cross-region inference profile id for Claude Sonnet 4.
+const MODEL_ID = "us.anthropic.claude-sonnet-4-20250514-v1:0";
 
 const SYSTEM_PROMPT = `You are a knowledgeable fitness coach and exercise expert. You answer questions about exercises, form, programming, and training.
 
@@ -39,10 +46,10 @@ ${chunk.content}`
     .join("\n\n---\n\n");
 
   // Build the messages array with optional chat history
-  const messages: Anthropic.MessageParam[] = [
+  const messages: AnthropicBedrock.MessageParam[] = [
     ...chatHistory.map(
       (msg) =>
-        ({ role: msg.role, content: msg.content }) as Anthropic.MessageParam
+        ({ role: msg.role, content: msg.content }) as AnthropicBedrock.MessageParam
     ),
     {
       role: "user",
@@ -57,9 +64,9 @@ ${query}`,
     },
   ];
 
-  // Call Claude API
+  // Call Claude via Bedrock
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: MODEL_ID,
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
     messages,

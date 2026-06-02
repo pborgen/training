@@ -1,0 +1,14 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+
+aws_region = "us-east-1"
+app_name   = "pfa-training"
+
+# The RAG coach uses AWS Bedrock (Claude Sonnet 4) via the App Runner instance
+# role — no Anthropic API key needed. Make sure Bedrock model access for the
+# Anthropic models is enabled in this region (Bedrock console → Model access).
+
+# Optional: set to enable Google OAuth login
+google_client_id = ""
+
+# Leave blank to auto-generate a strong DB password (recommended)
+db_password = ""

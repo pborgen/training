@@ -6,33 +6,37 @@ Fitness coaching platform — admin manages clients, schedules workouts, and tra
 
 Monorepo with npm workspaces:
 
-- `apps/web` — Full-stack app (Express API + React SPA)
-- `apps/rag` — RAG exercise coach library (knowledge base, retrieval, generation, DB)
+- `apps/api` — **Python FastAPI backend** (standalone `uv` project). The migration target replacing the `apps/web` Express server: same `/api/*` routes, same Postgres schema, raw SQL via `asyncpg`. Also serves the built React client. Run with `uv run api` from `apps/api/`. RAG coach is ported here under `src/api/rag/`.
+- `apps/web` — React SPA (client) + the legacy Express API (`src/server.ts`, `src/db.ts`). The Express server is being retired in favor of `apps/api`; the React client is kept and points at whichever backend is running on `:8080`.
+- `apps/rag` — Legacy TypeScript RAG library (used by the Express server). Reimplemented in Python under `apps/api/src/api/rag/`.
 - `apps/agent` — Python agents built on LangChain (standalone `uv` project, not an npm workspace). One folder per agent under `src/agents/`; `src/agents/common/` holds shared model/config helpers. Add new agents as sibling folders with their own `cli.py` entry and register in `pyproject.toml` `[project.scripts]`. Run with `uv run chatbot` from `apps/agent/`.
 
 ## Tech Stack
 
 - **Frontend:** React 19, TanStack Router (file-based), TanStack React Query, Vite 8, CSS (no component library)
-- **Backend:** Express 4, TypeScript, `postgres` npm package (raw SQL, no ORM)
-- **Database:** PostgreSQL — tables auto-created on startup via `ensureTables()` in `db.ts`
+- **Backend:** FastAPI (Python, `apps/api`) — async, `asyncpg`, raw SQL, no ORM. (Legacy: Express 4 + TypeScript `postgres` in `apps/web`, being retired.)
+- **Database:** PostgreSQL — tables auto-created on startup (`ensure_tables()` in `apps/api/src/api/db.py`; legacy `ensureTables()` in `apps/web/src/db.ts`)
 - **Auth:** Google OAuth + username/password, roles: `admin` | `client`
-- **AI:** Anthropic SDK for RAG-based exercise coach
+- **AI:** Claude on AWS Bedrock for the RAG-based exercise coach
 
 ## Commands
 
 ```bash
-# From repo root:
-npm run web:dev        # Start dev server + vite client (port 8080 + vite proxy)
-npm run web:build      # Build for production
+# From repo root — current (Python API + React client):
+./scripts/dev.sh       # Postgres check + FastAPI on :8080 + Vite client (proxies /api)
+npm run api:dev        # FastAPI only (uvicorn --reload, :8080)
+npm run client:dev     # Vite client only (proxies /api → :8080)
+npm run web:build      # Build the React client for production
 
-# From apps/web:
-npm run dev            # Same as above
-npm run dev:server     # Server only (tsx watch)
-npm run dev:client     # Client only (vite)
-npm run build          # tsc + vite build → dist/
+# Legacy Express server (apps/web), kept during transition:
+npm run web:dev        # Express API + vite client (port 8080 + vite proxy)
+
+# From apps/api:
+uv run api             # Start the FastAPI server (serves API + built client)
+uv sync                # Install/refresh Python deps
 ```
 
-TypeScript check: `npx tsc --noEmit` (from `apps/web`)
+TypeScript check (client): `npx tsc --noEmit` (from `apps/web`)
 
 ## Environment Variables
 

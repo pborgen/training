@@ -6,15 +6,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.server.json && vite build",
     "build:server": "tsc -p tsconfig.server.json",
+    "build:client": "vite build",
     "dev": "trap 'kill 0' EXIT; tsx watch --env-file=.env src/server.ts & vite --config vite.config.ts & wait",
     "dev:server": "tsx watch --env-file=.env src/server.ts",
     "dev:client": "vite --config vite.config.ts",
-    "start": "npm run build && node dist/server.js",
-    "vercel-build": "cd ../rag && npx tsc && cd ../web && tsc -p tsconfig.server.json && vite build"
+    "start": "npm run build && node dist/server.js"
   },
   "dependencies": {
     "training-rag": "*",
-    "@anthropic-ai/sdk": "^0.79.0",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-router": "^1.166.7",
     "@vitejs/plugin-react": "^6.0.0",

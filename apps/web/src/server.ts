@@ -16,6 +16,7 @@ import {
   getScheduledWorkouts, getScheduledWorkoutsForAll, createScheduledWorkout, deleteScheduledWorkout,
   getAllRoutinesAdmin, seedDevRoutines, getSetting, setSetting,
   getAdminStats, getClientSummaries, getRecentWorkoutsAll,
+  listPublishedCoaches, getCoachSpotlight, upsertCoachSpotlight, seedCoachSpotlights,
 } from "./db.js";
 import {
   ensureRagTables, getKnowledgeChunkCount, getAllKnowledgeChunks, getKnowledgeChunk,
@@ -76,6 +77,7 @@ const DEV_ACCOUNTS = [
   { email: "admin@dev.local", name: "Admin", role: "admin" },
   { email: "paul@dev.local", name: "Paul", role: "client" },
   { email: "diego@dev.local", name: "Diego", role: "client" },
+  { email: "coach@dev.local", name: "Coach Riley Vance", role: "coach" },
 ];
 
 app.get("/api/dev/accounts", (_req, res) => {
@@ -106,6 +108,14 @@ async function requireAdmin(req: express.Request, res: express.Response): Promis
   if (!email) return null;
   const role = await getUserRole(email);
   if (role !== "admin") { res.status(403).json({ error: "Forbidden" }); return null; }
+  return email;
+}
+
+async function requireCoach(req: express.Request, res: express.Response): Promise<string | null> {
+  const email = await requireUser(req, res);
+  if (!email) return null;
+  const role = await getUserRole(email);
+  if (role !== "coach") { res.status(403).json({ error: "Forbidden" }); return null; }
   return email;
 }
 
@@ -611,6 +621,61 @@ app.delete("/api/readiness/:id", async (req, res) => {
   }
 });
 
+/* ── Coach Spotlights ──────────────────────── */
+
+// Browse: any authenticated user sees the published showcase
+app.get("/api/coaches", async (req, res) => {
+  try {
+    const email = await requireUser(req, res);
+    if (!email) return;
+    res.json(await listPublishedCoaches());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+// Browse detail: any authenticated user; only published unless they own it
+app.get("/api/coaches/:email", async (req, res) => {
+  try {
+    const requester = await requireUser(req, res);
+    if (!requester) return;
+    const target = decodeURIComponent(req.params.email);
+    const spotlight = await getCoachSpotlight(target);
+    if (!spotlight) return res.status(404).json({ error: "Coach not found" });
+    if (!spotlight.published && spotlight.email !== requester) {
+      return res.status(404).json({ error: "Coach not found" });
+    }
+    res.json(spotlight);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+// Coach editor: read own spotlight (returns defaults if none yet)
+app.get("/api/coach/spotlight", async (req, res) => {
+  try {
+    const email = await requireCoach(req, res);
+    if (!email) return;
+    let spotlight = await getCoachSpotlight(email);
+    if (!spotlight) spotlight = await upsertCoachSpotlight(email, {});
+    res.json(spotlight);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+// Coach editor: upsert own spotlight (including published toggle)
+app.put("/api/coach/spotlight", async (req, res) => {
+  try {
+    const email = await requireCoach(req, res);
+    if (!email) return;
+    const spotlight = await upsertCoachSpotlight(email, req.body);
+    res.json({ ok: true, spotlight });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 /* ── RAG Exercise Coach ────────────────────── */
 
 app.get("/api/rag/status", async (req, res) => {
@@ -745,6 +810,7 @@ if (!process.env.VERCEL) {
     await seedExercises();
     await seedDevUsers();
     await seedDevRoutines();
+    await seedCoachSpotlights();
     app.listen(port, () => {
       console.log(`Training app running on http://localhost:${port}`);
     });

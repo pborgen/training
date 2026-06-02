@@ -146,6 +146,37 @@ export interface ClientSummary {
   lastCheckin: string | null;
 }
 
+export interface CoachSocials {
+  instagram?: string;
+  website?: string;
+  youtube?: string;
+}
+
+export interface CoachListItem {
+  email: string;
+  fullName: string;
+  photoUrl: string;
+  tagline: string;
+  specialties: string[];
+  accentColor: string;
+  yearsExperience: number;
+}
+
+export interface CoachSpotlight {
+  email: string;
+  fullName: string;
+  photoUrl: string;
+  tagline: string;
+  bio: string;
+  specialties: string[];
+  certifications: string[];
+  yearsExperience: number;
+  coverPhoto: string;
+  accentColor: string;
+  socials: CoachSocials;
+  published: boolean;
+}
+
 export interface RecentWorkoutAdmin {
   id: string;
   routineId: string;

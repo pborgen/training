@@ -144,6 +144,13 @@ export const sendRagMessage = (message: string, sessionId?: string) => apiFetch<
 export const fetchRagChatHistory = (sessionId: string) => apiFetch<RagMessage[]>("GET", `/api/rag/chat/${sessionId}`);
 export const triggerRagSeed = () => apiFetch<{ ok: boolean; chunksProcessed: number }>("POST", "/api/rag/seed");
 
+// Coach Spotlights
+import type { CoachListItem, CoachSpotlight } from "./types";
+export const fetchCoaches = () => apiFetch<CoachListItem[]>("GET", "/api/coaches");
+export const fetchCoach = (email: string) => apiFetch<CoachSpotlight>("GET", `/api/coaches/${encodeURIComponent(email)}`);
+export const fetchMySpotlight = () => apiFetch<CoachSpotlight>("GET", "/api/coach/spotlight");
+export const saveMySpotlight = (data: Partial<CoachSpotlight>) => apiFetch<{ ok: boolean; spotlight: CoachSpotlight }>("PUT", "/api/coach/spotlight", data);
+
 // Session
 export const checkSession = () => apiFetch<{ authenticated: boolean; email?: string }>("GET", "/api/session");
 

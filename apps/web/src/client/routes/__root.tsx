@@ -8,6 +8,8 @@ const NAV_ITEMS = [
   { to: "/workout", label: "Workout", icon: "workout", bottomNav: true },
   { to: "/readiness", label: "Readiness", icon: "readiness", bottomNav: true },
   { to: "/exercises", label: "Exercises", icon: "exercises" },
+  { to: "/coaches", label: "Coaches", icon: "users", bottomNav: true },
+  { to: "/my-spotlight", label: "My Spotlight", icon: "coach", coachOnly: true, bottomNav: true },
   { to: "/coach", label: "Coach", icon: "coach", bottomNav: true },
   { to: "/calendar", label: "Calendar", icon: "calendar", adminOnly: true, bottomNav: true },
   { to: "/users", label: "Users", icon: "users", adminOnly: true, bottomNav: true },
@@ -65,10 +67,12 @@ export function RootLayout() {
   }, [router]);
 
   const isPublic = path === "/" || path === "/login";
-  const isAdmin = user?.role === "admin";
+  const role = user?.role;
+  const isAdmin = role === "admin";
   const visibleNavItems = NAV_ITEMS.filter(item => {
     if ("adminOnly" in item && item.adminOnly) return isAdmin;
-    if ("clientOnly" in item && item.clientOnly) return !isAdmin;
+    if ("clientOnly" in item && item.clientOnly) return role === "client";
+    if ("coachOnly" in item && item.coachOnly) return role === "coach";
     return true;
   });
 
@@ -108,7 +112,7 @@ export function RootLayout() {
               {visibleNavItems.map((item) => (
                 <button
                   key={item.to}
-                  className={`sidebar-item ${path === item.to || (item.to === "/dashboard" && path.startsWith("/routines")) ? "active" : ""}`}
+                  className={`sidebar-item ${path === item.to || (item.to === "/dashboard" && path.startsWith("/routines")) || (item.to === "/coaches" && path.startsWith("/coaches")) ? "active" : ""}`}
                   onClick={() => navigate(item.to)}
                 >
                   <NavIcon name={item.icon} size={20} />

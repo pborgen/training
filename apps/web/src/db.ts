@@ -137,6 +137,32 @@ export async function ensureTables() {
     )
   `;
   await sql()`
+    CREATE TABLE IF NOT EXISTS coach_spotlights (
+      email TEXT PRIMARY KEY REFERENCES profiles(email),
+      tagline TEXT DEFAULT '',
+      bio TEXT DEFAULT '',
+      specialties JSONB DEFAULT '[]',
+      certifications JSONB DEFAULT '[]',
+      years_experience INT DEFAULT 0,
+      cover_photo TEXT DEFAULT '',
+      accent_color TEXT DEFAULT '',
+      socials JSONB DEFAULT '{}',
+      published BOOLEAN DEFAULT false,
+      synced_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  // Migrations: add columns if missing (matches existing convention)
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS tagline TEXT DEFAULT ''`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT ''`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS specialties JSONB DEFAULT '[]'`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS years_experience INT DEFAULT 0`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS cover_photo TEXT DEFAULT ''`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT ''`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS socials JSONB DEFAULT '{}'`; } catch {};
+  try { await sql()`ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS published BOOLEAN DEFAULT false`; } catch {};
+
+  await sql()`
     CREATE TABLE IF NOT EXISTS app_settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
@@ -224,14 +250,44 @@ export async function seedDevUsers() {
   if (rows[0].n > 0) return;
   // Default dev users — passwords are plaintext hashed with crypto.createHash for simplicity
   const devUsers = [
-    { username: "admin", password: "admin", email: "admin@dev.local", role: "admin" },
-    { username: "paul", password: "paul", email: "paul@dev.local", role: "client" },
-    { username: "diego", password: "diego", email: "diego@dev.local", role: "client" },
+    { username: "admin", password: "admin", email: "admin@dev.local", role: "admin", fullName: "Admin" },
+    { username: "paul", password: "paul", email: "paul@dev.local", role: "client", fullName: "Paul" },
+    { username: "diego", password: "diego", email: "diego@dev.local", role: "client", fullName: "Diego" },
+    { username: "coach", password: "coach", email: "coach@dev.local", role: "coach", fullName: "Coach Riley Vance" },
   ];
   for (const u of devUsers) {
     const hash = (await import("node:crypto")).createHash("sha256").update(u.password).digest("hex");
     await createUser(u.username, hash, u.email, u.role);
+    if (u.fullName) {
+      await sql()`UPDATE profiles SET full_name = ${u.fullName} WHERE email = ${u.email} AND full_name = ''`;
+    }
   }
+}
+
+export async function seedCoachSpotlights() {
+  const rows = await sql()`SELECT count(*)::int AS n FROM coach_spotlights`;
+  if (rows[0].n > 0) return;
+  await ensureProfile("coach@dev.local");
+  await sql()`UPDATE profiles SET full_name = ${"Coach Riley Vance"} WHERE email = ${"coach@dev.local"} AND full_name = ''`;
+  const specialties = JSON.stringify(["Strength", "Mobility", "Hypertrophy"]);
+  const certifications = JSON.stringify(["NASM-CPT", "USA Weightlifting L1", "Precision Nutrition L1"]);
+  const socials = JSON.stringify({ instagram: "rileyvance.lifts", website: "https://rileyvance.fit", youtube: "@rileyvancetraining" });
+  await sql()`
+    INSERT INTO coach_spotlights
+      (email, tagline, bio, specialties, certifications, years_experience, accent_color, socials, published)
+    VALUES (
+      ${"coach@dev.local"},
+      ${"Building unbreakable athletes, one rep at a time."},
+      ${"I'm Riley — a strength and mobility coach who believes training should feel like a craft, not a chore. Over the past decade I've helped lifters of every level rebuild their foundations, move pain-free, and put real plates on the bar. My programming blends classic barbell strength with deliberate mobility work so you stay strong AND supple. Whether you're chasing your first pull-up or a 400lb deadlift, we'll get there with intent."},
+      ${specialties}::jsonb,
+      ${certifications}::jsonb,
+      ${11},
+      ${"#FF7A45"},
+      ${socials}::jsonb,
+      ${true}
+    )
+    ON CONFLICT (email) DO NOTHING
+  `;
 }
 
 export async function seedDevRoutines() {
@@ -737,6 +793,84 @@ export async function getClientSummaries() {
     checkinCount: r.checkin_count as number,
     lastCheckin: r.last_checkin as string | null,
   }));
+}
+
+/* ── Coach Spotlights ──────────────────── */
+
+function parseJsonbObj(val: unknown): Record<string, unknown> {
+  if (typeof val === "string") return JSON.parse(val);
+  return (val as Record<string, unknown>) || {};
+}
+
+export async function listPublishedCoaches() {
+  const rows = await sql()`
+    SELECT cs.email, cs.tagline, cs.specialties, cs.accent_color, cs.years_experience,
+           p.full_name, p.photo_url
+    FROM coach_spotlights cs
+    JOIN profiles p ON cs.email = p.email
+    WHERE cs.published = true
+    ORDER BY p.full_name, cs.email
+  `;
+  return rows.map(r => ({
+    email: r.email as string,
+    fullName: (r.full_name as string) || "",
+    photoUrl: (r.photo_url as string) || "",
+    tagline: (r.tagline as string) || "",
+    specialties: parseJsonb(r.specialties) as string[],
+    accentColor: (r.accent_color as string) || "",
+    yearsExperience: (r.years_experience as number) || 0,
+  }));
+}
+
+export async function getCoachSpotlight(email: string) {
+  const rows = await sql()`
+    SELECT cs.*, p.full_name, p.photo_url
+    FROM coach_spotlights cs
+    JOIN profiles p ON cs.email = p.email
+    WHERE cs.email = ${email}
+  `;
+  return rows[0] ? toSpotlightObj(rows[0]) : null;
+}
+
+export async function upsertCoachSpotlight(email: string, d: Record<string, unknown>) {
+  await ensureProfile(email);
+  const specialties = JSON.stringify(d.specialties || []);
+  const certifications = JSON.stringify(d.certifications || []);
+  const socials = JSON.stringify(d.socials || {});
+  await sql()`
+    INSERT INTO coach_spotlights
+      (email, tagline, bio, specialties, certifications, years_experience, cover_photo, accent_color, socials, published, synced_at)
+    VALUES (
+      ${email}, ${(d.tagline as string) || ""}, ${(d.bio as string) || ""},
+      ${specialties}::jsonb, ${certifications}::jsonb, ${(d.yearsExperience as number) || 0},
+      ${(d.coverPhoto as string) || ""}, ${(d.accentColor as string) || ""},
+      ${socials}::jsonb, ${(d.published as boolean) || false}, now()
+    )
+    ON CONFLICT (email) DO UPDATE SET
+      tagline = EXCLUDED.tagline, bio = EXCLUDED.bio,
+      specialties = EXCLUDED.specialties, certifications = EXCLUDED.certifications,
+      years_experience = EXCLUDED.years_experience, cover_photo = EXCLUDED.cover_photo,
+      accent_color = EXCLUDED.accent_color, socials = EXCLUDED.socials,
+      published = EXCLUDED.published, synced_at = now()
+  `;
+  return getCoachSpotlight(email);
+}
+
+function toSpotlightObj(r: Record<string, unknown>) {
+  return {
+    email: r.email as string,
+    fullName: (r.full_name as string) || "",
+    photoUrl: (r.photo_url as string) || "",
+    tagline: (r.tagline as string) || "",
+    bio: (r.bio as string) || "",
+    specialties: parseJsonb(r.specialties) as string[],
+    certifications: parseJsonb(r.certifications) as string[],
+    yearsExperience: (r.years_experience as number) || 0,
+    coverPhoto: (r.cover_photo as string) || "",
+    accentColor: (r.accent_color as string) || "",
+    socials: parseJsonbObj(r.socials) as { instagram?: string; website?: string; youtube?: string },
+    published: !!r.published,
+  };
 }
 
 export async function getRecentWorkoutsAll(limit: number) {

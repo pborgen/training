@@ -18,6 +18,7 @@ import { KnowledgePage } from "./routes/_authenticated/knowledge";
 import { CoachesPage } from "./routes/_authenticated/coaches";
 import { CoachDetailPage } from "./routes/_authenticated/coaches.$email";
 import { MySpotlightPage } from "./routes/_authenticated/my-spotlight";
+import { CoachRequestsPage } from "./routes/_authenticated/coach-requests";
 
 const AUTH_KEY = "training_app_auth_v1";
 
@@ -63,6 +64,7 @@ const knowledgeRoute = createRoute({ getParentRoute: () => authenticatedRoute, p
 const coachesRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/coaches", component: CoachesPage });
 const coachDetailRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/coaches/$email", component: CoachDetailPage });
 const mySpotlightRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/my-spotlight", component: MySpotlightPage });
+const coachRequestsRoute = createRoute({ getParentRoute: () => authenticatedRoute, path: "/coach-requests", component: CoachRequestsPage });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -84,6 +86,7 @@ const routeTree = rootRoute.addChildren([
     coachesRoute,
     coachDetailRoute,
     mySpotlightRoute,
+    coachRequestsRoute,
   ]),
 ]);
 

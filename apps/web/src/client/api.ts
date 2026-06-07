@@ -145,11 +145,19 @@ export const fetchRagChatHistory = (sessionId: string) => apiFetch<RagMessage[]>
 export const triggerRagSeed = () => apiFetch<{ ok: boolean; chunksProcessed: number }>("POST", "/api/rag/seed");
 
 // Coach Spotlights
-import type { CoachListItem, CoachSpotlight } from "./types";
+import type { CoachListItem, CoachSpotlight, CoachingRequest, CoachingRequestStatus } from "./types";
 export const fetchCoaches = () => apiFetch<CoachListItem[]>("GET", "/api/coaches");
 export const fetchCoach = (email: string) => apiFetch<CoachSpotlight>("GET", `/api/coaches/${encodeURIComponent(email)}`);
 export const fetchMySpotlight = () => apiFetch<CoachSpotlight>("GET", "/api/coach/spotlight");
 export const saveMySpotlight = (data: Partial<CoachSpotlight>) => apiFetch<{ ok: boolean; spotlight: CoachSpotlight }>("PUT", "/api/coach/spotlight", data);
+
+// Coaching Requests
+export const requestCoach = (email: string, body: { planId?: string; planName?: string; message?: string }) =>
+  apiFetch<{ ok: boolean; request: CoachingRequest }>("POST", `/api/coaches/${encodeURIComponent(email)}/request`, body);
+export const fetchMyRequests = () => apiFetch<CoachingRequest[]>("GET", "/api/my-requests");
+export const fetchCoachRequests = () => apiFetch<CoachingRequest[]>("GET", "/api/coach/requests");
+export const updateCoachRequest = (id: string, status: CoachingRequestStatus) =>
+  apiFetch<{ ok: boolean; request: CoachingRequest }>("PUT", `/api/coach/requests/${id}`, { status });
 
 // Session
 export const checkSession = () => apiFetch<{ authenticated: boolean; email?: string }>("GET", "/api/session");

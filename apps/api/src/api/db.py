@@ -245,6 +245,48 @@ async def ensure_tables() -> None:
     )
     await _execute(
         """
+        CREATE TABLE IF NOT EXISTS coach_spotlights (
+          email TEXT PRIMARY KEY REFERENCES profiles(email),
+          tagline TEXT DEFAULT '',
+          bio TEXT DEFAULT '',
+          specialties JSONB DEFAULT '[]',
+          certifications JSONB DEFAULT '[]',
+          years_experience INT DEFAULT 0,
+          cover_photo TEXT DEFAULT '',
+          accent_color TEXT DEFAULT '',
+          socials JSONB DEFAULT '{}',
+          plans JSONB DEFAULT '[]',
+          gallery JSONB DEFAULT '[]',
+          published BOOLEAN DEFAULT false,
+          synced_at TIMESTAMPTZ DEFAULT now()
+        )
+        """
+    )
+    # Migrations: add columns if missing (matches the Express convention).
+    for col, ddl in (
+        ("plans", "JSONB DEFAULT '[]'"),
+        ("gallery", "JSONB DEFAULT '[]'"),
+    ):
+        try:
+            await _execute(f"ALTER TABLE coach_spotlights ADD COLUMN IF NOT EXISTS {col} {ddl}")
+        except Exception:
+            pass
+    await _execute(
+        """
+        CREATE TABLE IF NOT EXISTS coaching_requests (
+          id TEXT PRIMARY KEY,
+          coach_email TEXT NOT NULL REFERENCES profiles(email),
+          client_email TEXT NOT NULL REFERENCES profiles(email),
+          plan_id TEXT DEFAULT '',
+          plan_name TEXT DEFAULT '',
+          message TEXT DEFAULT '',
+          status TEXT DEFAULT 'pending',
+          created_at TIMESTAMPTZ DEFAULT now()
+        )
+        """
+    )
+    await _execute(
+        """
         CREATE TABLE IF NOT EXISTS app_settings (
           key TEXT PRIMARY KEY,
           value TEXT NOT NULL
@@ -358,9 +400,58 @@ async def seed_dev_users() -> None:
         {"username": "admin", "password": "admin", "email": "admin@dev.local", "role": "admin"},
         {"username": "paul", "password": "paul", "email": "paul@dev.local", "role": "client"},
         {"username": "diego", "password": "diego", "email": "diego@dev.local", "role": "client"},
+        {"username": "coach", "password": "coach", "email": "coach@dev.local", "role": "coach"},
     ]
     for u in dev_users:
         await create_user(u["username"], _sha256(u["password"]), u["email"], u["role"])
+
+
+async def seed_coach_spotlights() -> None:
+    row = await _fetchrow("SELECT count(*)::int AS n FROM coach_spotlights")
+    if row and row["n"] > 0:
+        return
+    await ensure_profile("coach@dev.local")
+    await _execute(
+        "UPDATE profiles SET full_name = $1 WHERE email = $2 AND (full_name IS NULL OR full_name = '')",
+        "Coach Riley Vance", "coach@dev.local",
+    )
+    plans = [
+        {"id": "kickstart", "name": "Kickstart", "price": 89, "cadence": "month", "popular": False,
+         "description": "Self-guided programming to get moving.",
+         "features": ["Custom monthly program", "Exercise video library", "Async chat (48h replies)"]},
+        {"id": "momentum", "name": "Momentum", "price": 199, "cadence": "month", "popular": True,
+         "description": "The sweet spot — coaching with real accountability.",
+         "features": ["Everything in Kickstart", "Weekly form reviews", "Bi-weekly video check-ins", "Nutrition guardrails"]},
+        {"id": "1on1", "name": "1-on-1 Elite", "price": 349, "cadence": "month", "popular": False,
+         "description": "Hands-on, fully bespoke coaching.",
+         "features": ["Everything in Momentum", "Weekly 1:1 video calls", "24/7 priority chat", "Fully custom nutrition"]},
+    ]
+    gallery = [
+        {"type": "video", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "caption": "Deadlift setup breakdown"},
+        {"type": "video", "url": "https://vimeo.com/76979871", "caption": "A day coaching at the gym"},
+    ]
+    await _execute(
+        """
+        INSERT INTO coach_spotlights
+          (email, tagline, bio, specialties, certifications, years_experience, accent_color, socials, plans, gallery, published)
+        VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11)
+        ON CONFLICT (email) DO NOTHING
+        """,
+        "coach@dev.local",
+        "Building unbreakable athletes, one rep at a time.",
+        "I'm Riley — a strength and mobility coach who believes training should feel like a craft, not a chore. "
+        "Over the past decade I've helped lifters of every level rebuild their foundations, move pain-free, and put "
+        "real plates on the bar. My programming blends classic barbell strength with deliberate mobility work so you "
+        "stay strong AND supple. Whether you're chasing your first pull-up or a 400lb deadlift, we'll get there with intent.",
+        ["Strength", "Mobility", "Hypertrophy"],
+        ["NASM-CPT", "USA Weightlifting L1", "Precision Nutrition L1"],
+        11,
+        "#FF7A45",
+        {"instagram": "rileyvance.lifts", "website": "https://rileyvance.fit", "youtube": "@rileyvancetraining"},
+        plans,
+        gallery,
+        True,
+    )
 
 
 _DEV_ROUTINES = [
@@ -962,3 +1053,186 @@ async def get_recent_workouts_all(limit: int) -> list[dict]:
         {**_to_workout(r), "email": r["email"], "clientName": r["full_name"] or ""}
         for r in rows
     ]
+
+
+# ── Coach spotlights ──────────────────────────────────────
+
+
+def _jsonb(val, default):
+    """JSONB columns come back decoded; fall back if NULL or wrong shape."""
+    if val is None:
+        return default
+    if isinstance(val, str):
+        try:
+            return json.loads(val)
+        except Exception:
+            return default
+    return val
+
+
+async def list_published_coaches() -> list[dict]:
+    rows = await _fetch(
+        """
+        SELECT cs.email, cs.tagline, cs.specialties, cs.accent_color, cs.years_experience, cs.plans,
+               p.full_name, p.photo_url
+        FROM coach_spotlights cs
+        JOIN profiles p ON cs.email = p.email
+        WHERE cs.published = true
+        ORDER BY p.full_name, cs.email
+        """
+    )
+    out = []
+    for r in rows:
+        plans = _jsonb(r["plans"], [])
+        prices = [p["price"] for p in plans if isinstance(p.get("price"), (int, float)) and p["price"] > 0]
+        out.append({
+            "email": r["email"],
+            "fullName": r["full_name"] or "",
+            "photoUrl": r["photo_url"] or "",
+            "tagline": r["tagline"] or "",
+            "specialties": _jsonb(r["specialties"], []),
+            "accentColor": r["accent_color"] or "",
+            "yearsExperience": r["years_experience"] or 0,
+            "startingPrice": min(prices) if prices else 0,
+        })
+    return out
+
+
+def _to_spotlight(r: asyncpg.Record) -> dict:
+    return {
+        "email": r["email"],
+        "fullName": r["full_name"] or "",
+        "photoUrl": r["photo_url"] or "",
+        "tagline": r["tagline"] or "",
+        "bio": r["bio"] or "",
+        "specialties": _jsonb(r["specialties"], []),
+        "certifications": _jsonb(r["certifications"], []),
+        "yearsExperience": r["years_experience"] or 0,
+        "coverPhoto": r["cover_photo"] or "",
+        "accentColor": r["accent_color"] or "",
+        "socials": _jsonb(r["socials"], {}),
+        "plans": _jsonb(r["plans"], []),
+        "gallery": _jsonb(r["gallery"], []),
+        "published": bool(r["published"]),
+    }
+
+
+async def get_coach_spotlight(email: str) -> dict | None:
+    row = await _fetchrow(
+        """
+        SELECT cs.*, p.full_name, p.photo_url
+        FROM coach_spotlights cs
+        JOIN profiles p ON cs.email = p.email
+        WHERE cs.email = $1
+        """,
+        email,
+    )
+    return _to_spotlight(row) if row else None
+
+
+async def upsert_coach_spotlight(email: str, d: dict) -> dict | None:
+    await ensure_profile(email)
+    await _execute(
+        """
+        INSERT INTO coach_spotlights
+          (email, tagline, bio, specialties, certifications, years_experience, cover_photo, accent_color, socials, plans, gallery, published, synced_at)
+        VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb, $12, now())
+        ON CONFLICT (email) DO UPDATE SET
+          tagline = EXCLUDED.tagline, bio = EXCLUDED.bio,
+          specialties = EXCLUDED.specialties, certifications = EXCLUDED.certifications,
+          years_experience = EXCLUDED.years_experience, cover_photo = EXCLUDED.cover_photo,
+          accent_color = EXCLUDED.accent_color, socials = EXCLUDED.socials,
+          plans = EXCLUDED.plans, gallery = EXCLUDED.gallery,
+          published = EXCLUDED.published, synced_at = now()
+        """,
+        email,
+        d.get("tagline") or "",
+        d.get("bio") or "",
+        d.get("specialties") or [],
+        d.get("certifications") or [],
+        int(d.get("yearsExperience") or 0),
+        d.get("coverPhoto") or "",
+        d.get("accentColor") or "",
+        d.get("socials") or {},
+        d.get("plans") or [],
+        d.get("gallery") or [],
+        bool(d.get("published") or False),
+    )
+    return await get_coach_spotlight(email)
+
+
+# ── Coaching requests ─────────────────────────────────────
+
+
+def _to_request(r: asyncpg.Record) -> dict:
+    d = dict(r)
+    return {
+        "id": d["id"],
+        "coachEmail": d["coach_email"],
+        "clientEmail": d["client_email"],
+        "clientName": d.get("client_name") or "",
+        "clientPhoto": d.get("client_photo") or "",
+        "coachName": d.get("coach_name") or "",
+        "planId": d["plan_id"] or "",
+        "planName": d["plan_name"] or "",
+        "message": d["message"] or "",
+        "status": d["status"] or "pending",
+        "createdAt": d["created_at"],
+    }
+
+
+async def get_coaching_request(id: str) -> dict | None:
+    row = await _fetchrow("SELECT * FROM coaching_requests WHERE id = $1", id)
+    return _to_request(row) if row else None
+
+
+async def create_coaching_request(
+    id: str, coach_email: str, client_email: str, plan_id: str, plan_name: str, message: str
+) -> dict | None:
+    await ensure_profile(client_email)
+    await _execute(
+        """
+        INSERT INTO coaching_requests (id, coach_email, client_email, plan_id, plan_name, message)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        """,
+        id, coach_email, client_email, plan_id, plan_name, message,
+    )
+    return await get_coaching_request(id)
+
+
+async def list_requests_for_coach(coach_email: str) -> list[dict]:
+    rows = await _fetch(
+        """
+        SELECT cr.*, p.full_name AS client_name, p.photo_url AS client_photo
+        FROM coaching_requests cr
+        JOIN profiles p ON cr.client_email = p.email
+        WHERE cr.coach_email = $1
+        ORDER BY cr.created_at DESC
+        """,
+        coach_email,
+    )
+    return [_to_request(r) for r in rows]
+
+
+async def list_requests_for_client(client_email: str) -> list[dict]:
+    rows = await _fetch(
+        """
+        SELECT cr.*, p.full_name AS coach_name
+        FROM coaching_requests cr
+        JOIN profiles p ON cr.coach_email = p.email
+        WHERE cr.client_email = $1
+        ORDER BY cr.created_at DESC
+        """,
+        client_email,
+    )
+    return [_to_request(r) for r in rows]
+
+
+async def update_coaching_request_status(id: str, coach_email: str, status: str) -> dict | None:
+    row = await _fetchrow(
+        "UPDATE coaching_requests SET status = $1 WHERE id = $2 AND coach_email = $3 RETURNING id",
+        status, id, coach_email,
+    )
+    if not row:
+        return None
+    return await get_coaching_request(id)

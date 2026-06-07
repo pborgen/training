@@ -31,7 +31,9 @@ function CoachCard({ coach, onOpen }: { coach: CoachListItem; onOpen: () => void
       </div>
       <div className="coach-card-foot">
         <span className="coach-years">
-          <strong>{coach.yearsExperience}</strong> yr{coach.yearsExperience === 1 ? "" : "s"} experience
+          {coach.startingPrice > 0
+            ? <>from <strong>${coach.startingPrice}</strong>/mo</>
+            : <><strong>{coach.yearsExperience}</strong> yr{coach.yearsExperience === 1 ? "" : "s"} experience</>}
         </span>
         <span className="coach-card-arrow" aria-hidden>→</span>
       </div>

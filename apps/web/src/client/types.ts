@@ -160,6 +160,23 @@ export interface CoachListItem {
   specialties: string[];
   accentColor: string;
   yearsExperience: number;
+  startingPrice: number;
+}
+
+export interface CoachPlan {
+  id: string;
+  name: string;
+  price: number;
+  cadence: string; // "month" | "session" | "week" | "program" | ...
+  description: string;
+  features: string[];
+  popular: boolean;
+}
+
+export interface CoachMedia {
+  type: "photo" | "video";
+  url: string; // photo: base64 data URL; video: YouTube/Vimeo/direct URL
+  caption: string;
 }
 
 export interface CoachSpotlight {
@@ -174,7 +191,25 @@ export interface CoachSpotlight {
   coverPhoto: string;
   accentColor: string;
   socials: CoachSocials;
+  plans: CoachPlan[];
+  gallery: CoachMedia[];
   published: boolean;
+}
+
+export type CoachingRequestStatus = "pending" | "accepted" | "declined";
+
+export interface CoachingRequest {
+  id: string;
+  coachEmail: string;
+  clientEmail: string;
+  clientName: string;
+  clientPhoto: string;
+  coachName: string;
+  planId: string;
+  planName: string;
+  message: string;
+  status: CoachingRequestStatus;
+  createdAt: string;
 }
 
 export interface RecentWorkoutAdmin {

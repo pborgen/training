@@ -19,6 +19,7 @@ from .rag.db import ensure_rag_tables
 from .routers import (
     admin,
     auth,
+    coaches,
     exercises,
     profile,
     rag,
@@ -37,6 +38,7 @@ async def lifespan(app: FastAPI):
     await db.seed_exercises()
     await db.seed_dev_users()
     await db.seed_dev_routines()
+    await db.seed_coach_spotlights()
     print(f"Training API ready (port {config.PORT})")
     yield
     await db.close_pool()
@@ -79,6 +81,7 @@ for module in (
     readiness,
     schedule,
     admin,
+    coaches,
     rag,
 ):
     app.include_router(module.router)

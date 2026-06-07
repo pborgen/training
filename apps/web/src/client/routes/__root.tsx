@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: "/exercises", label: "Exercises", icon: "exercises" },
   { to: "/coaches", label: "Coaches", icon: "users", bottomNav: true },
   { to: "/my-spotlight", label: "My Spotlight", icon: "coach", coachOnly: true, bottomNav: true },
+  { to: "/coach-requests", label: "Requests", icon: "inbox", coachOnly: true, bottomNav: true },
   { to: "/coach", label: "Coach", icon: "coach", bottomNav: true },
   { to: "/calendar", label: "Calendar", icon: "calendar", adminOnly: true, bottomNav: true },
   { to: "/users", label: "Users", icon: "users", adminOnly: true, bottomNav: true },
@@ -41,6 +42,8 @@ function NavIcon({ name, size = 22 }: { name: string; size?: number }) {
       return <svg viewBox="0 0 24 24" {...s}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
     case "calendar":
       return <svg viewBox="0 0 24 24" {...s}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+    case "inbox":
+      return <svg viewBox="0 0 24 24" {...s}><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>;
     case "menu":
       return <svg viewBox="0 0 24 24" {...s}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
     case "close":

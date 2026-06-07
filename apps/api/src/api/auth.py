@@ -55,3 +55,10 @@ async def require_admin(email: str = Depends(require_user)) -> str:
     if role != "admin":
         raise HTTPException(status_code=403, detail="Forbidden")
     return email
+
+
+async def require_coach(email: str = Depends(require_user)) -> str:
+    role = await db.get_user_role(email)
+    if role != "coach":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return email

@@ -1,7 +1,24 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(sed -n '138,180p' apps/web/src/db.ts)",
+      "Bash(sed -n '837,1005p' apps/web/src/db.ts)",
+      "Bash(sed -n '18,50p' db.py)",
+      "Bash(sed -n '353,420p' db.py)",
+      "Bash(sed -n '570,600p' db.py)",
+      "Bash(sed -n '630,664p' db.py)",
+      "Bash(sed -n '95,122p' apps/web/src/server.ts)",
+      "Bash(sed -n '283,335p' apps/web/src/db.ts)",
+      "Bash(sed -n '266,282p' apps/web/src/db.ts)",
+      "Bash(echo \"== brew pg services ==\"; brew services list 2>/dev/null | grep -i postgres || echo \"no brew pg service\"; echo \"== pg_ctl/postgres binaries ==\"; ls /opt/homebrew/opt/ 2>/dev/null | grep -i postgres || echo none; echo \"== docker ==\"; docker info >/dev/null 2>&1 && echo \"docker running\" || echo \"docker not running\"; echo \"== any postgres process ==\"; pgrep -fl postgres | head)",
+      "Read(//opt/homebrew/opt/**)",
+      "Bash(sed -n '314,330p' db.py)",
+      "Bash(sed -n '502,520p' db.py)",
+      "Bash(sed -n '240,262p' db.py)",
+      "Bash(git rm *)",
+      "Bash(bash /tmp/coaches_smoke.sh)",
+      "Bash(pkill -f \"uvicorn api.main:app\")"
     ]
   }
 }

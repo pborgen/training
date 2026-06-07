@@ -6,30 +6,26 @@ Fitness coaching platform — admin manages clients, schedules workouts, and tra
 
 Monorepo with npm workspaces:
 
-- `apps/api` — **Python FastAPI backend** (standalone `uv` project). The migration target replacing the `apps/web` Express server: same `/api/*` routes, same Postgres schema, raw SQL via `asyncpg`. Also serves the built React client. Run with `uv run api` from `apps/api/`. RAG coach is ported here under `src/api/rag/`.
-- `apps/web` — React SPA (client) + the legacy Express API (`src/server.ts`, `src/db.ts`). The Express server is being retired in favor of `apps/api`; the React client is kept and points at whichever backend is running on `:8080`.
-- `apps/rag` — Legacy TypeScript RAG library (used by the Express server). Reimplemented in Python under `apps/api/src/api/rag/`.
+- `apps/api` — **Python FastAPI backend** (standalone `uv` project). The single backend: serves all `/api/*` routes, raw SQL via `asyncpg`, and the built React client. Run with `uv run api` from `apps/api/`. RAG coach lives under `src/api/rag/`. Routers are one file per feature in `src/api/routers/`, registered in `main.py`.
+- `apps/web` — React SPA client only (Vite). Talks to the FastAPI backend on `:8080` (Vite proxies `/api` in dev). No server code here.
 - `apps/agent` — Python agents built on LangChain (standalone `uv` project, not an npm workspace). One folder per agent under `src/agents/`; `src/agents/common/` holds shared model/config helpers. Add new agents as sibling folders with their own `cli.py` entry and register in `pyproject.toml` `[project.scripts]`. Run with `uv run chatbot` from `apps/agent/`.
 
 ## Tech Stack
 
 - **Frontend:** React 19, TanStack Router (file-based), TanStack React Query, Vite 8, CSS (no component library)
-- **Backend:** FastAPI (Python, `apps/api`) — async, `asyncpg`, raw SQL, no ORM. (Legacy: Express 4 + TypeScript `postgres` in `apps/web`, being retired.)
-- **Database:** PostgreSQL — tables auto-created on startup (`ensure_tables()` in `apps/api/src/api/db.py`; legacy `ensureTables()` in `apps/web/src/db.ts`)
-- **Auth:** Google OAuth + username/password, roles: `admin` | `client`
+- **Backend:** FastAPI (Python, `apps/api`) — async, `asyncpg`, raw SQL, no ORM.
+- **Database:** PostgreSQL — tables auto-created on startup (`ensure_tables()` in `apps/api/src/api/db.py`)
+- **Auth:** Google OAuth + username/password, roles: `admin` | `client` | `coach`
 - **AI:** Claude on AWS Bedrock for the RAG-based exercise coach
 
 ## Commands
 
 ```bash
-# From repo root — current (Python API + React client):
+# From repo root:
 ./scripts/dev.sh       # Postgres check + FastAPI on :8080 + Vite client (proxies /api)
 npm run api:dev        # FastAPI only (uvicorn --reload, :8080)
 npm run client:dev     # Vite client only (proxies /api → :8080)
 npm run web:build      # Build the React client for production
-
-# Legacy Express server (apps/web), kept during transition:
-npm run web:dev        # Express API + vite client (port 8080 + vite proxy)
 
 # From apps/api:
 uv run api             # Start the FastAPI server (serves API + built client)
@@ -54,23 +50,26 @@ Seeded automatically when `ALLOW_DEV_AUTH_HEADERS=true`:
 - `admin@dev.local` / `admin` (admin role)
 - `paul@dev.local` / `paul` (client role)
 - `diego@dev.local` / `diego` (client role)
+- `coach@dev.local` / `coach` (coach role)
 
 ## Architecture Conventions
 
-### Database (`apps/web/src/db.ts`)
+### Database (`apps/api/src/api/db.py`)
 
-- All schema in `ensureTables()` — tables created if not exist, migrations via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
-- Raw SQL queries — no ORM. Helper functions like `getProfile()`, `upsertProfile()`, etc.
-- UUIDs via `crypto.randomUUID()`
+- All schema in `ensure_tables()` — tables created if not exist, migrations via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
+- Raw SQL via `asyncpg` — no ORM. Helper functions like `get_profile()`, `upsert_profile()`, etc.
+- A JSONB type codec (`_init_conn`) encodes/decodes JSONB transparently to/from Python objects
+- UUIDs via `uuid.uuid4()`
 - JSONB columns for nested arrays (exercises in routines, media on exercises)
-- snake_case column names, camelCase in TypeScript
-- Seed functions (`seedExercises`, `seedDevAccounts`, `seedDevRoutines`) only insert when table is empty
+- snake_case column names; helpers return camelCase dicts for the client
+- Seed functions (`seed_exercises`, `seed_dev_users`, `seed_dev_routines`, `seed_coach_spotlights`) only insert when table is empty; called from the lifespan in `main.py`
 
-### Server (`apps/web/src/server.ts`)
+### Server (`apps/api/src/api/`)
 
-- All API routes in a single file
-- Auth middleware reads `x-user-email` header (dev) or `Authorization: Bearer` token (prod)
-- Admin routes under `/api/admin/*` — check `role === "admin"` and return 403 if not
+- Routes grouped by feature into routers under `routers/` (one file each), registered in `main.py`'s `include_router` loop
+- Auth via FastAPI dependencies in `auth.py`: `require_user` / `require_admin` / `require_coach`. Reads `x-user-email` header (dev) or `Authorization: Bearer` token (prod)
+- Admin routes under `/api/admin/*` depend on `require_admin` (403 if not admin); coach routes depend on `require_coach`
+- Errors returned as `{ "error": "..." }` via exception handlers in `main.py`
 - Feature flags stored in `app_settings` table (key-value)
 
 ### Client
@@ -108,15 +107,15 @@ Seeded automatically when `ALLOW_DEV_AUTH_HEADERS=true`:
 
 ## Adding a New Feature (typical flow)
 
-1. Add table/columns in `ensureTables()` and DB helper functions in `db.ts`
-2. Add Express routes in `server.ts` (with auth/role checks)
-3. Add TypeScript types in `client/types.ts`
-4. Add API client functions in `client/api.ts`
-5. Add React Query hook in `client/hooks/`
-6. Add route component in `client/routes/_authenticated/`
-7. Register route in `client/router.tsx`
-8. Add nav item in `client/routes/__root.tsx` (with `adminOnly`/`clientOnly` flags if needed)
-9. Add CSS in `client/styles.css`
+1. Add table/columns in `ensure_tables()` and DB helper functions in `apps/api/src/api/db.py`
+2. Add a router in `apps/api/src/api/routers/` (with auth dependencies) and register it in `main.py`
+3. Add TypeScript types in `apps/web/src/client/types.ts`
+4. Add API client functions in `apps/web/src/client/api.ts`
+5. Add React Query hook in `apps/web/src/client/hooks/`
+6. Add route component in `apps/web/src/client/routes/_authenticated/`
+7. Register route in `apps/web/src/client/router.tsx`
+8. Add nav item in `apps/web/src/client/routes/__root.tsx` (with `adminOnly`/`clientOnly` flags if needed)
+9. Add CSS in `apps/web/src/client/styles.css`
 
 <frontend_aesthetics>
 You tend to converge toward generic, "on distribution" outputs. In frontend design, this creates what users call the "AI slop" aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight. Focus on:

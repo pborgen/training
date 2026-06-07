@@ -3,17 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "apps/web",
-    "apps/rag"
+    "apps/web"
   ],
   "scripts": {
-    "web:dev": "npm --workspace apps/web run dev",
-    "web:build": "npm --workspace apps/web run build",
-    "web:start": "npm --workspace apps/web run start",
     "client:dev": "npm --workspace apps/web run dev:client",
+    "web:build": "npm --workspace apps/web run build",
     "api:dev": "cd apps/api && uv run uvicorn api.main:app --reload --port 8080",
     "api:start": "cd apps/api && uv run api",
-    "agent:chatbot": "cd apps/agent && uv run chatbot",
-    "rag:build": "npm --workspace apps/rag run build"
+    "agent:chatbot": "cd apps/agent && uv run chatbot"
   }
 }

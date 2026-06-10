@@ -8,15 +8,13 @@
 FROM node:22-bookworm-slim AS client
 WORKDIR /app
 
-# Workspace manifests first for layer caching. apps/rag is listed as a
-# workspace so the install resolves it, even though the client doesn't import it.
+# Workspace manifests first for layer caching.
 COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/package.json
-COPY apps/rag/package.json apps/rag/package.json
 RUN npm ci
 
 COPY apps/web apps/web
-RUN npm --workspace apps/web run build:client   # → apps/web/dist/client
+RUN npm --workspace apps/web run build   # → apps/web/dist/client
 
 # ── Stage 2: Python API runtime ──────────────────────────
 FROM python:3.12-slim AS runner
@@ -40,4 +38,7 @@ RUN uv sync --frozen --no-dev
 COPY --from=client /app/apps/web/dist/client /app/apps/web/dist/client
 
 EXPOSE 8080
-CMD ["uv", "run", "--no-dev", "api"]
+# Run from the venv built above. --no-sync prevents uv from re-resolving/building
+# at startup (which would hit PyPI — impossible behind the VPC connector with no
+# NAT, and unnecessary since the image is already fully built).
+CMD ["uv", "run", "--frozen", "--no-sync", "--no-dev", "api"]

@@ -26,6 +26,12 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app/apps/api
 
+# The API depends on the agents package (apps/agent) via a uv path source
+# (agents = { path = "../agent" }), so its source must be present before
+# `uv sync` can resolve and install it. Includes models.json, which
+# common/model.py reads at runtime.
+COPY apps/agent /app/apps/agent
+
 # Install deps first (cached unless pyproject/lock change).
 COPY apps/api/pyproject.toml apps/api/uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev

@@ -1,43 +1,25 @@
 import { useState, useRef, useEffect } from "react";
-import { useRagStatus, useRagChat } from "../../hooks/useRagChat";
-import { triggerRagSeed, type RagChatResponse } from "../../api";
-import { useAuth } from "../../auth";
+import { useCoachTeam } from "../../hooks/useCoachTeam";
+import type { TeamSpecialist } from "../../api";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
-  sources?: RagChatResponse["sources"];
+  specialists?: TeamSpecialist[];
 }
 
 export function CoachPage() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
-  const { data: status, refetch: refetchStatus } = useRagStatus();
-  const chatMutation = useRagChat();
+  const chatMutation = useCoachTeam();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | undefined>();
-  const [expandedSources, setExpandedSources] = useState<Set<number>>(new Set());
-  const [seeding, setSeeding] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  async function handleSeed() {
-    setSeeding(true);
-    try {
-      await triggerRagSeed();
-      await refetchStatus();
-    } catch (e) {
-      alert("Seeding failed: " + (e as Error).message);
-    } finally {
-      setSeeding(false);
-    }
-  }
 
   async function handleSend() {
     const msg = input.trim();
@@ -51,7 +33,7 @@ export function CoachPage() {
       setSessionId(result.sessionId);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: result.answer, sources: result.sources },
+        { role: "assistant", content: result.answer, specialists: result.specialists },
       ]);
     } catch {
       setMessages((prev) => [
@@ -61,8 +43,8 @@ export function CoachPage() {
     }
   }
 
-  function toggleSources(idx: number) {
-    setExpandedSources((prev) => {
+  function toggle(idx: number) {
+    setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(idx)) next.delete(idx);
       else next.add(idx);
@@ -70,57 +52,26 @@ export function CoachPage() {
     });
   }
 
-  if (!status) return (
-    <div className="skeleton-page">
-      <div className="skeleton skeleton-heading" />
-      <div className="skeleton skeleton-card" />
-      <div className="skeleton skeleton-card-sm" />
-    </div>
-  );
-
-  if (!status.seeded) {
-    return (
-      <div className="coach-empty">
-        <h2>Exercise Coach</h2>
-        <p>The knowledge base hasn't been set up yet. It needs to be seeded with exercise data before you can ask questions.</p>
-        <p style={{ fontSize: "0.9rem", color: "var(--muted)" }}>
-          This will embed {66} exercise knowledge chunks using OpenAI's embedding model and store them in pgvector for similarity search.
-        </p>
-        {isAdmin ? (
-          <button className="btn-primary" onClick={handleSeed} disabled={seeding}>
-            {seeding ? "Seeding... (this takes ~30s)" : "Seed Knowledge Base"}
-          </button>
-        ) : (
-          <p style={{ color: "var(--muted)" }}>Ask an admin to seed the knowledge base.</p>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="coach-container">
       <div className="coach-header">
-        <h2>Exercise Coach</h2>
+        <h2>Coaching Team</h2>
         <div className="coach-header-right">
-          <span className="coach-chip">{status.chunkCount} chunks indexed</span>
-          <label className="coach-toggle">
-            <input type="checkbox" checked={showDebug} onChange={(e) => setShowDebug(e.target.checked)} />
-            Show sources
-          </label>
+          <span className="coach-chip">planning · nutrition · recovery · progress</span>
         </div>
       </div>
 
       <div className="coach-messages">
         {messages.length === 0 && (
           <div className="coach-welcome">
-            <p><strong>Ask me anything about exercises!</strong></p>
-            <p>Try questions like:</p>
+            <p><strong>Your coaching team is ready.</strong></p>
+            <p>A supervisor routes each question to the right specialists. Try:</p>
             <div className="coach-suggestions">
               {[
-                "What muscles does the deadlift target?",
-                "How do I fix knee cave during squats?",
-                "What's a good substitute for the hack squat?",
-                "How should I program hip thrusts for glute growth?",
+                "Should I train hard today or take it easy?",
+                "How much protein should I be eating for my goal?",
+                "Review my recent progress and find any plateaus",
+                "Plan my training week and schedule it",
               ].map((q) => (
                 <button key={q} className="coach-suggestion" onClick={() => { setInput(q); }}>
                   {q}
@@ -135,23 +86,23 @@ export function CoachPage() {
             {msg.role === "assistant" && <div className="coach-avatar">P</div>}
             <div className="coach-msg-label">{msg.role === "user" ? "You" : "Coach"}</div>
             <div className="coach-msg-content">{msg.content}</div>
-            {msg.sources && msg.sources.length > 0 && (showDebug || expandedSources.has(i)) && (
-              <div className="coach-sources">
-                <div className="coach-sources-title" onClick={() => toggleSources(i)}>
-                  Sources ({msg.sources.length} chunks retrieved)
-                </div>
-                {msg.sources.map((s, j) => (
-                  <div key={j} className="coach-source">
-                    <span className="coach-source-title">{s.title}</span>
-                    <span className="coach-source-score">{(s.similarity * 100).toFixed(0)}% match</span>
+            {msg.specialists && msg.specialists.length > 0 && (
+              <>
+                <button className="coach-sources-toggle" onClick={() => toggle(i)}>
+                  {expanded.has(i) ? "Hide" : "Show"} team breakdown ({msg.specialists.length}{" "}
+                  {msg.specialists.length === 1 ? "specialist" : "specialists"})
+                </button>
+                {expanded.has(i) && (
+                  <div className="coach-sources">
+                    {msg.specialists.map((s, j) => (
+                      <div key={j} className="coach-source" style={{ flexDirection: "column", alignItems: "flex-start", gap: "0.25rem" }}>
+                        <span className="coach-source-title">{s.title}</span>
+                        <span style={{ color: "var(--muted)", fontSize: "0.85rem", whiteSpace: "pre-wrap" }}>{s.content}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-            {msg.sources && msg.sources.length > 0 && !showDebug && !expandedSources.has(i) && (
-              <button className="coach-sources-toggle" onClick={() => toggleSources(i)}>
-                View {msg.sources.length} sources
-              </button>
+                )}
+              </>
             )}
           </div>
         ))}
@@ -160,7 +111,7 @@ export function CoachPage() {
           <div className="coach-msg coach-msg-assistant">
             <div className="coach-avatar">P</div>
             <div className="coach-msg-label">Coach</div>
-            <div className="coach-msg-content coach-typing">Thinking...</div>
+            <div className="coach-msg-content coach-typing">The team is conferring...</div>
           </div>
         )}
 
@@ -183,7 +134,7 @@ export function CoachPage() {
               handleSend();
             }
           }}
-          placeholder="Ask about exercises, form, programming..."
+          placeholder="Ask about training, nutrition, recovery, or your progress..."
           disabled={chatMutation.isPending}
           rows={3}
           autoFocus

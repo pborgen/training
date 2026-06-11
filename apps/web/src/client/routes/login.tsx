@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useAuth } from "../auth";
 import { fetchDevAccounts, fetchAuthConfig, loginWithCredentials, loginWithGoogle, type DevAccount } from "../api";
+import { HelixMark } from "../components/brand";
 
 declare global {
   interface Window {
@@ -17,7 +18,6 @@ declare global {
 }
 
 const ROLE_ICONS: Record<string, string> = { admin: "\u2699\ufe0f", client: "\ud83c\udfcb\ufe0f" };
-const PFA_LOGO = "https://images.squarespace-cdn.com/content/v1/57fef5f4e6f2e1a3ef7c6696/1485724156548-OZA8P2UZELE7H1MPGE2K/PFA_Wormdark_White.png";
 
 export function LoginPage() {
   const { signIn, isAuthenticated } = useAuth();
@@ -104,9 +104,9 @@ export function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-brand">
-          <img src={PFA_LOGO} alt="PFA" className="login-pfa-logo" />
-          <h1>Premier Fitness Alliance</h1>
-          <p>Precision Training. Real Results.</p>
+          <div className="login-pfa-logo"><HelixMark size={48} /></div>
+          <h1>HELIX</h1>
+          <p>Engineered Performance</p>
         </div>
 
         {googleClientId && (

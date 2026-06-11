@@ -26,6 +26,7 @@ from .routers import (
     readiness,
     routines,
     schedule,
+    team,
     workout_log,
 )
 
@@ -83,6 +84,7 @@ for module in (
     admin,
     coaches,
     rag,
+    team,
 ):
     app.include_router(module.router)
 

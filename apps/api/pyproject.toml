@@ -11,10 +11,14 @@ dependencies = [
     "anthropic[bedrock]>=0.40.0",
     "python-dotenv>=1.0.0",
     "requests>=2.34.2",
+    "agents",
 ]
 
 [project.scripts]
 api = "api.main:run"
+
+[tool.uv.sources]
+agents = { path = "../agent", editable = true }
 
 [build-system]
 requires = ["hatchling"]

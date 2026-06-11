@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PFA Training — Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --accent: #CBFF2E;
+    --accent-dim: #8fb01f;
+    --bg: #0b0d0a;
+    --bg-2: #12150f;
+    --panel: #161a12;
+    --panel-2: #1b2016;
+    --line: #2a3120;
+    --ink: #eef2e6;
+    --ink-dim: #9aa48c;
+    --ink-faint: #6b7560;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 600px at 85% -5%, rgba(203,255,46,0.10), transparent 60%),
+      radial-gradient(900px 700px at -10% 20%, rgba(203,255,46,0.04), transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Space Mono', ui-monospace, monospace;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 28px 120px; }
+
+  /* ---------- Hero ---------- */
+  header {
+    padding: 88px 0 56px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.42em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 22px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(44px, 8vw, 104px);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    margin: 0 0 28px;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  .lede {
+    max-width: 680px; font-size: 16px; color: var(--ink-dim); margin: 0;
+  }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 34px;
+  }
+  .chip {
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    border: 1px solid var(--line); color: var(--ink-dim);
+    padding: 7px 13px; border-radius: 999px; background: rgba(255,255,255,0.015);
+  }
+  .chip b { color: var(--accent); font-weight: 700; }
+
+  /* ---------- Section ---------- */
+  section { padding: 64px 0 8px; border-bottom: 1px solid var(--line); }
+  .sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+  .sec-num {
+    font-size: 13px; color: var(--accent); font-weight: 700; letter-spacing: 0.1em;
+  }
+  h2 {
+    font-family: 'Fraunces', serif; font-weight: 600;
+    font-size: clamp(26px, 4vw, 40px); letter-spacing: -0.01em;
+    margin: 0; line-height: 1.05;
+  }
+  .sec-sub { color: var(--ink-dim); font-size: 15px; max-width: 760px; margin: 14px 0 30px; }
+  .sec-sub code, p code, td code, li code {
+    font-family: 'Space Mono', monospace; font-size: 0.9em;
+    color: var(--accent); background: rgba(203,255,46,0.07);
+    padding: 1px 6px; border-radius: 5px;
+  }
+
+  /* ---------- Diagram panel ---------- */
+  .diagram {
+    background:
+      linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 30px 24px;
+    margin: 8px 0 18px;
+    overflow-x: auto;
+    box-shadow: 0 30px 80px -40px rgba(0,0,0,0.9);
+  }
+  .mermaid { display: flex; justify-content: center; }
+  .mermaid svg { max-width: 100%; height: auto; }
+
+  /* ---------- Cards / legend ---------- */
+  .grid { display: grid; gap: 14px; margin: 22px 0 8px; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .card {
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px 22px;
+  }
+  .card h3 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 19px;
+    margin: 0 0 8px; letter-spacing: -0.01em;
+  }
+  .card h3 .dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    margin-right: 9px; vertical-align: middle; background: var(--accent);
+  }
+  .card p { margin: 0; font-size: 13.5px; color: var(--ink-dim); }
+  .card .tag {
+    display: inline-block; margin-top: 12px; font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+    border: 1px solid var(--line); padding: 4px 9px; border-radius: 6px;
+  }
+
+  /* ---------- Table ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 22px 0 8px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 700;
+  }
+  td:first-child { color: var(--accent); white-space: nowrap; font-weight: 700; }
+  tr:hover td { background: rgba(203,255,46,0.025); }
+
+  footer {
+    padding-top: 40px; color: var(--ink-faint); font-size: 12.5px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  footer a { color: var(--accent-dim); text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">PFA Training · System Architecture</p>
+    <h1>Coach,<br/>schedule,<br/><em>and ask.</em></h1>
+    <p class="lede">
+      A fitness-coaching platform: admins schedule workouts and manage clients;
+      clients log sessions, check readiness, and chat with an AI exercise coach.
+      One React SPA, one FastAPI backend, two standalone Python apps, on Terraform-managed AWS.
+    </p>
+    <div class="meta-row">
+      <span class="chip"><b>React 19</b> · TanStack · Vite</span>
+      <span class="chip"><b>FastAPI</b> · asyncpg · raw SQL</span>
+      <span class="chip"><b>PostgreSQL</b> · pgvector</span>
+      <span class="chip"><b>LangChain</b> agents</span>
+      <span class="chip"><b>AWS</b> App Runner · RDS · Bedrock</span>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>System overview</h2></div>
+    <p class="sec-sub">
+      The browser talks only to FastAPI, which serves both the built SPA and every
+      <code>/api/*</code> route. The LangChain agents and the knowledge scraper are
+      separate <code>uv</code> apps that orbit the same backend and database.
+    </p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TB
+    SPA["apps/web — React 19 SPA<br/>TanStack Router + React Query"]
+
+    subgraph backend["FastAPI backend · apps/api · :8080"]
+      MAIN["main.py<br/>routers · CORS · serves SPA<br/>lifespan: ensure_tables + seeds"]
+      ROUTERS["routers/*<br/>auth · profile · admin · coaches · team<br/>exercises · routines · schedule<br/>readiness · workout_log · rag"]
+      RAG["rag/* — RAG coach<br/>retrieval · embeddings · generation"]
+      MAIN --> ROUTERS --> RAG
+    end
+
+    AGENT["apps/agent — LangChain<br/>chatbot · coach · team"]
+    KNOW["apps/knowledge — scraper"]
+    DB[("PostgreSQL<br/>asyncpg · pgvector")]
+    BEDROCK["AWS Bedrock — Claude"]
+    LLM["LLM providers · models.json<br/>Anthropic · Groq · Ollama"]
+    WEB(["External sites"])
+
+    SPA -->|"/api/* (Vite proxy in dev)"| MAIN
+    ROUTERS -->|asyncpg| DB
+    RAG -->|retrieve| DB
+    RAG -->|generate| BEDROCK
+    AGENT -->|"HTTP tools → /api/*"| MAIN
+    AGENT -->|chat model| LLM
+    KNOW -->|scrape| WEB
+    KNOW -->|upsert docs| DB
+      </pre>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Two AI coaches</h2></div>
+    <p class="sec-sub">
+      The most important distinction in the codebase: there are <b>two</b> separate
+      AI coaches. One lives inside FastAPI; the other is a standalone agents app.
+    </p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart LR
+    subgraph inproc["In-process · apps/api/src/api/rag"]
+      Q1(["client question"]) --> RET["retrieval.py<br/>vector search over<br/>knowledge_documents"]
+      RET --> GEN["generation.py<br/>AnthropicBedrock → Claude"]
+      GEN --> A1(["grounded answer"])
+    end
+    subgraph outproc["Out-of-process · apps/agent"]
+      COACH["coach/ — single ReAct agent<br/>StateGraph: model ⇄ ToolNode<br/>tools = HTTP calls to /api/*"]
+      TEAM["team/ — supervisor + specialists<br/>planning · nutrition · recovery · progress"]
+    end
+      </pre>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3><span class="dot"></span>RAG coach</h3>
+        <p>Runs <em>inside</em> FastAPI. <code>retrieval.py</code> does vector search over
+        <code>knowledge_documents</code>; <code>generation.py</code> calls Claude on
+        <b>AWS Bedrock</b> via <code>AnthropicBedrock</code>. Exposed by the <code>rag</code> router.</p>
+        <span class="tag">in-process · grounded</span>
+      </div>
+      <div class="card">
+        <h3><span class="dot"></span>LangChain agents</h3>
+        <p>Separate <code>uv</code> app. Provider chosen in <code>models.json</code>
+        (<b>Anthropic · Groq · Ollama</b>). The <code>coach</code> ReAct agent reads real
+        app data by calling <code>/api/*</code> with dev-auth headers; the <code>team</code>
+        supervisor routes each turn to one of four specialists.</p>
+        <span class="tag">out-of-process · tool-using</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Backend routers</h2></div>
+    <p class="sec-sub">
+      One file per feature under <code>routers/</code>, each an <code>APIRouter</code>
+      registered in <code>main.py</code>. Auth via dependencies in <code>auth.py</code> —
+      <code>require_user</code> / <code>require_admin</code> / <code>require_coach</code>.
+    </p>
+    <table>
+      <thead><tr><th>Router</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td>auth</td><td>Login, identity, role resolution</td></tr>
+        <tr><td>profile</td><td>Client profile read / write</td></tr>
+        <tr><td>admin</td><td>Admin-only user &amp; content management (<code>/api/admin/*</code>)</td></tr>
+        <tr><td>coaches</td><td>Coach spotlights &amp; coach-facing routes (<code>require_coach</code>)</td></tr>
+        <tr><td>team</td><td>Multi-agent coaching team chat (<code>/api/coach/team/chat</code>)</td></tr>
+        <tr><td>exercises</td><td>Exercise catalog (seeded)</td></tr>
+        <tr><td>routines</td><td>Workout routines (JSONB exercise arrays)</td></tr>
+        <tr><td>schedule</td><td>Scheduling workouts for clients</td></tr>
+        <tr><td>readiness</td><td>Daily readiness check-ins</td></tr>
+        <tr><td>workout_log</td><td>Logged workout sets / results</td></tr>
+        <tr><td>rag</td><td>RAG exercise-coach Q&amp;A endpoint</td></tr>
+      </tbody>
+    </table>
+    <p class="sec-sub" style="margin-top:26px">
+      All schema lives in <code>ensure_tables()</code> (<code>db.py</code>); migrations are
+      <code>ALTER TABLE … ADD COLUMN IF NOT EXISTS</code>. Seeds run from the lifespan and
+      only insert when a table is empty. Raw SQL via <code>asyncpg</code>, no ORM; email is
+      the primary user identifier throughout.
+    </p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Deployment · AWS</h2></div>
+    <p class="sec-sub">
+      A single container image (root <code>Dockerfile</code>) builds the SPA and serves it
+      from FastAPI on App Runner. Private RDS and Bedrock are reached over a VPC connector.
+      The agents and scraper are dev/ops tools — <b>not</b> part of the deployed service.
+    </p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TB
+    DEV["deploy.sh<br/>docker build + push"] --> ECR["ECR · web image"]
+    ECR -->|"auto-deploy on :tag push"| AR["App Runner · :8080<br/>FastAPI + built SPA"]
+    AR -->|VPC connector| VPCC{{"VPC"}}
+    VPCC --> RDS[("RDS PostgreSQL 16<br/>private subnet")]
+    VPCC --> VPE["VPC endpoint<br/>bedrock-runtime"]
+    VPE --> BR["AWS Bedrock"]
+    SM["Secrets Manager<br/>POSTGRES_URL"] -.runtime secret.-> AR
+    IAM["IAM roles<br/>bedrock · secrets · ECR"] -.-> AR
+      </pre>
+    </div>
+    <div class="grid grid-2">
+      <div class="card"><h3><span class="dot"></span>Build &amp; ship</h3>
+        <p>Image lives in <b>ECR</b> with a lifecycle policy; pushing a new tag triggers an
+        App Runner redeploy automatically.</p>
+        <span class="tag">ECR · App Runner</span></div>
+      <div class="card"><h3><span class="dot"></span>Private egress</h3>
+        <p>App Runner reaches private <b>RDS Postgres 16</b> and a <code>bedrock-runtime</code>
+        VPC endpoint through a VPC connector. <code>POSTGRES_URL</code> comes from Secrets Manager.</p>
+        <span class="tag">VPC · RDS · Bedrock</span></div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section style="border-bottom:none">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Dev workflow</h2></div>
+    <p class="sec-sub">
+      <code>./scripts/dev.sh</code> checks Postgres, runs FastAPI on <code>:8080</code>, and
+      starts Vite (proxying <code>/api</code> → <code>:8080</code>). With
+      <code>ALLOW_DEV_AUTH_HEADERS=true</code> the <code>admin</code> / <code>client</code> /
+      <code>coach</code> dev accounts are seeded and the <code>x-user-email</code> header is accepted.
+    </p>
+    <div class="grid grid-2">
+      <div class="card"><h3><span class="dot"></span>apps/api</h3>
+        <p><code>uv run api</code> — FastAPI + built client. <code>uv sync</code> to install deps.</p></div>
+      <div class="card"><h3><span class="dot"></span>apps/agent</h3>
+        <p><code>uv run chatbot</code> — LangChain agents. Provider set in <code>models.json</code>.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>PFA Training · architecture reference</span>
+    <span>Source of truth: <a href="ARCHITECTURE.md">docs/ARCHITECTURE.md</a></span>
+  </footer>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'loose',
+    theme: 'base',
+    fontFamily: "'Space Mono', monospace",
+    themeVariables: {
+      background: '#161a12',
+      primaryColor: '#1b2016',
+      primaryBorderColor: '#3a4429',
+      primaryTextColor: '#eef2e6',
+      lineColor: '#6b7560',
+      secondaryColor: '#12150f',
+      tertiaryColor: '#12150f',
+      clusterBkg: 'rgba(203,255,46,0.04)',
+      clusterBorder: '#2a3120',
+      fontSize: '14px',
+      edgeLabelBackground: '#0b0d0a'
+    },
+    flowchart: { curve: 'basis', padding: 16, nodeSpacing: 46, rankSpacing: 60, htmlLabels: true }
+  });
+</script>
+</body>
+</html>

@@ -144,6 +144,11 @@ export const sendRagMessage = (message: string, sessionId?: string) => apiFetch<
 export const fetchRagChatHistory = (sessionId: string) => apiFetch<RagMessage[]>("GET", `/api/rag/chat/${sessionId}`);
 export const triggerRagSeed = () => apiFetch<{ ok: boolean; chunksProcessed: number }>("POST", "/api/rag/seed");
 
+// Coaching Team (multi-agent) — replaces the RAG coach as the in-app coach
+export interface TeamSpecialist { name: string; title: string; content: string; }
+export interface TeamChatResponse { answer: string; specialists: TeamSpecialist[]; sessionId: string; }
+export const sendTeamMessage = (message: string, sessionId?: string) => apiFetch<TeamChatResponse>("POST", "/api/coach/team/chat", { message, sessionId });
+
 // Coach Spotlights
 import type { CoachListItem, CoachSpotlight, CoachingRequest, CoachingRequestStatus } from "./types";
 export const fetchCoaches = () => apiFetch<CoachListItem[]>("GET", "/api/coaches");

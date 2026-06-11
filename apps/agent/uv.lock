@@ -7,23 +7,27 @@ name = "agents"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "langchain" },
     { name = "langchain-anthropic" },
     { name = "langchain-aws" },
     { name = "langchain-core" },
     { name = "langchain-groq" },
     { name = "langchain-ollama" },
+    { name = "langgraph" },
     { name = "python-dotenv" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.27.0" },
     { name = "langchain", specifier = ">=0.3.0" },
     { name = "langchain-anthropic", specifier = ">=0.3.0" },
     { name = "langchain-aws", specifier = ">=0.2.0" },
     { name = "langchain-core", specifier = ">=0.3.0" },
     { name = "langchain-groq", specifier = ">=0.2.0" },
     { name = "langchain-ollama", specifier = ">=0.2.0" },
+    { name = "langgraph", specifier = ">=0.2.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
 ]
 

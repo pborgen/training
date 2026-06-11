@@ -1,6 +1,7 @@
 import { Outlet, useRouter } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useAuth } from "../auth";
+import { HelixMark } from "../components/brand";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard", bottomNav: true },
@@ -93,7 +94,7 @@ export function RootLayout() {
             <button className="header-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
               <NavIcon name={sidebarOpen ? "close" : "menu"} size={20} />
             </button>
-            <span className="app-title">PFA Training</span>
+            <span className="app-title"><HelixMark size={18} className="app-title-mark" />HELIX</span>
             <span className="header-right">
               <span className="user-email">{user?.email}</span>
               <button className="btn-link" onClick={() => { signOut(); router.navigate({ to: "/login" }); }}>
@@ -108,8 +109,8 @@ export function RootLayout() {
           {/* Sidebar */}
           <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
             <div className="sidebar-brand">
-              <div className="sidebar-logo">P</div>
-              <span className="sidebar-title">PFA Training</span>
+              <div className="sidebar-logo"><HelixMark size={26} /></div>
+              <span className="sidebar-title">HELIX</span>
             </div>
             <nav className="sidebar-nav">
               {visibleNavItems.map((item) => (
